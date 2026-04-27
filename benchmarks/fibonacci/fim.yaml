@@ -1,0 +1,6 @@
+# FIM benchmark config — fibonacci
+# First 64 Fibonacci numbers
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "result"

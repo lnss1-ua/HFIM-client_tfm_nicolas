@@ -1,0 +1,6 @@
+# FIM observable outputs — declares which variables to check for SDC
+# Types are auto-detected from the ELF (compiled with -g), just list names
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "result"

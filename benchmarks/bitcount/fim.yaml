@@ -1,0 +1,7 @@
+# FIM benchmark config — bitcount
+# Population count (Hamming weight) over 128-element array
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "result"
+    - name: "total"

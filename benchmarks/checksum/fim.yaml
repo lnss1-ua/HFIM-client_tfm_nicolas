@@ -1,0 +1,7 @@
+# FIM benchmark config — checksum
+# Declares what to observe for SDC detection
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "checksum"
+      type: "unsigned int"
