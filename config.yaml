@@ -1,0 +1,7 @@
+# FIM Client Configuration
+# Fill in your details — provided by your supervisor
+
+user: enrique
+server: 10.25.224.143
+ssh_key: ~/.ssh/fim-enrique
+port: 8765
