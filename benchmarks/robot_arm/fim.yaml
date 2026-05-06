@@ -1,0 +1,14 @@
+# FIM config — robot arm PID controller
+# Requires serial PTY feeder (PyBullet simulator)
+timeout: 120
+
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "tau"
+    - name: "posicion"
+    - name: "target_position"
+    - name: "loop_count"
+
+serial_pty: true
+serial_feeder_cmd: "python3 {benchmark_dir}/simulador_enrique/pybullet_feeder.py --pty {pty}"
