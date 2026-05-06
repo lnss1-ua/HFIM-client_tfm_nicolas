@@ -70,7 +70,8 @@ scp $SSH_OPTS -r "$BENCHMARK_DIR" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
 echo ""
 
 # ── Run on server (build + golden + campaign) ─────────────────────
-ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}"
+ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
+    sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*FIM/||g' -e 's|\x1b\[[0-9;]*m||g'
 
 # ── Pull results back to local machine ────────────────────────────
 REMOTE_RESULTS="/srv/fim/users/${USER}/results"
