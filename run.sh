@@ -71,7 +71,17 @@ echo ""
 
 # ── Run on server (build + golden + campaign) ─────────────────────
 ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
-    sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*FIM/||g' -e 's|\x1b\[[0-9;]*m||g'
+    sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g'
+
+# If --background, skip download (results not ready yet)
+for arg in "${PASS_ARGS[@]}"; do
+    if [ "$arg" = "--background" ]; then
+        echo ""
+        echo "Check status:     ./status.sh"
+        echo "Download results: ./status.sh --download"
+        exit 0
+    fi
+done
 
 # ── Pull results back to local machine ────────────────────────────
 REMOTE_RESULTS="/srv/fim/users/${USER}/results"
