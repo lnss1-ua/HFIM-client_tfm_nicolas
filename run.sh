@@ -31,6 +31,79 @@ REMOTE="fim-${USER}@${SERVER}"
 SSH_OPTS="-o StrictHostKeyChecking=no"
 [ -f "$SSH_KEY" ] && SSH_OPTS="$SSH_OPTS -i $SSH_KEY"
 
+# Check for --batch mode
+BATCH_FILE=""
+BATCH_BG=""
+PREV_WAS_BATCH=false
+for arg in "$@"; do
+    if [ "$PREV_WAS_BATCH" = true ]; then BATCH_FILE="$arg"; PREV_WAS_BATCH=false; continue; fi
+    if [ "$arg" = "--batch" ]; then PREV_WAS_BATCH=true; continue; fi
+    if [ "$arg" = "--background" ]; then BATCH_BG="--background"; fi
+done
+
+if [ -n "$BATCH_FILE" ]; then
+    # Batch mode: upload all benchmarks referenced in YAML, then run batch
+    if [ ! -f "$BATCH_FILE" ]; then
+        echo "Error: batch file not found: $BATCH_FILE"
+        exit 1
+    fi
+
+    echo "Batch campaign: $BATCH_FILE"
+    echo ""
+
+    # Extract benchmark names from YAML and upload each
+    BENCHMARKS=$(python3 -c "
+import yaml
+with open('$BATCH_FILE') as f:
+    b = yaml.safe_load(f)
+seen = set()
+for c in b.get('campaigns', []):
+    name = c.get('benchmark', b.get('defaults', {}).get('benchmark', ''))
+    if name and name not in seen:
+        print(name)
+        seen.add(name)
+" 2>/dev/null)
+
+    for bench in $BENCHMARKS; do
+        BENCH_DIR="$SCRIPT_DIR/benchmarks/$bench"
+        if [ -d "$BENCH_DIR" ]; then
+            echo "Uploading ${bench}..."
+            scp $SSH_OPTS -r "$BENCH_DIR" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
+        else
+            echo "Warning: benchmark ${bench} not found locally, skipping upload"
+        fi
+    done
+
+    # Upload the batch YAML
+    BATCH_NAME=$(basename "$BATCH_FILE")
+    scp $SSH_OPTS "$BATCH_FILE" "${REMOTE}:/srv/fim/users/${USER}/${BATCH_NAME}"
+    echo ""
+
+    # Run batch on server
+    ssh $SSH_OPTS "$REMOTE" "fim-run batch ${BATCH_NAME} $BATCH_BG" 2>&1 | \
+        sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g'
+
+    if [ -n "$BATCH_BG" ]; then
+        echo ""
+        echo "Check status:     ./status.sh"
+        echo "Download results: ./status.sh --download"
+    else
+        # Download all results
+        REMOTE_RESULTS="/srv/fim/users/${USER}/results"
+        LOCAL_RESULTS="$SCRIPT_DIR/results"
+        mkdir -p "$LOCAL_RESULTS"
+        echo ""
+        echo "Downloading results..."
+        for dir in $(ssh $SSH_OPTS "$REMOTE" "ls -d ${REMOTE_RESULTS}/*/ 2>/dev/null" | xargs -n1 basename 2>/dev/null); do
+            scp $SSH_OPTS -r "${REMOTE}:${REMOTE_RESULTS}/${dir}" "$LOCAL_RESULTS/"
+            ssh $SSH_OPTS "$REMOTE" "rm -rf ${REMOTE_RESULTS}/${dir}"
+            echo "  $dir"
+        done
+        echo "Done."
+    fi
+    exit 0
+fi
+
 # Parse arguments — extract benchmark dir, pass the rest through
 BENCHMARK_DIR=""
 PASS_ARGS=()
@@ -47,6 +120,7 @@ done
 
 if [ -z "$BENCHMARK_DIR" ]; then
     echo "Usage: $0 <benchmark_dir> [options]"
+    echo "       $0 --batch <campaign.yaml> [--background]"
     echo ""
     echo "Options:"
     echo "  -n, --injections N    Number of fault injections (default: 20)"
@@ -54,10 +128,12 @@ if [ -z "$BENCHMARK_DIR" ]; then
     echo "  --workers N           Parallel QEMU instances (default: 1)"
     echo "  --arch ARCH           riscv64 or aarch64 (default: riscv64)"
     echo "  --seed N              PRNG seed (default: 42)"
+    echo "  --background          Run in background"
+    echo "  --batch FILE          Run multiple campaigns from YAML config"
     echo ""
     echo "Available benchmarks:"
     for d in "$SCRIPT_DIR"/benchmarks/*/; do
-        [ -f "$d/main.c" ] && echo "  benchmarks/$(basename "$d")"
+        [ -f "$d/main.c" ] || [ -f "$d/Cargo.toml" ] && echo "  benchmarks/$(basename "$d")"
     done
     exit 1
 fi

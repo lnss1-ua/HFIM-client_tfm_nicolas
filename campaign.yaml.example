@@ -1,0 +1,35 @@
+# FIM Batch Campaign Configuration
+#
+# Run with: ./run.sh --batch campaign.yaml
+#           ./run.sh --batch campaign.yaml --background
+#
+# Each campaign inherits from 'defaults' unless overridden.
+# One section per memory campaign (batch handles multiple sections).
+
+defaults:
+  arch: riscv64
+  injections: 100
+  fault: register
+  seed: 42
+
+campaigns:
+  # register faults on mmult
+  - benchmark: mmult
+
+  # memory faults on mmult .bss section
+  - benchmark: mmult
+    fault: memory
+    section: ".bss"
+
+  # memory faults on mmult .data section
+  - benchmark: mmult
+    fault: memory
+    section: ".data"
+
+  # register faults on fibonacci with fewer injections
+  - benchmark: fibonacci
+    injections: 50
+
+  # register faults with different seed for reproducibility comparison
+  - benchmark: mmult
+    seed: 99
