@@ -1,6 +1,26 @@
-# FIM observable outputs — declares which variables to check for SDC
-# Types are auto-detected from the ELF (compiled with -g), just list names
+# FIM Benchmark Configuration
+#
+# This file tells FIM which variables to check for Silent Data Corruption.
+# Types and sizes are auto-detected from the compiled ELF (built with -g).
+
+# Observable variables for SDC detection
+# FIM reads these via GDB after each injection and compares to the golden run
 observable_outputs:
-  comparison: "exact"
+  comparison: "exact"      # "exact" or "tolerance"
   variables:
-    - name: "result"
+    - name: "result"       # Must be global volatile in your code
+    # - name: "other_var"
+    # - name: "float_var"
+    #   tolerance: 0.001   # For tolerance comparison mode
+
+# Uncomment for serial feeder benchmarks (e.g., robot arm with PyBullet)
+# serial_pty: true
+# serial_feeder_cmd: "python3 {benchmark_dir}/feeder.py --pty {pty}"
+
+# Uncomment to override default timeout (auto-calculated from golden run)
+# timeout: 60
+
+# Uncomment for memory fault injection (default is register)
+# target_types: [memory]
+# memory_start: ".data"    # Target ELF section start
+# memory_end: ".bss"       # Target ELF section end

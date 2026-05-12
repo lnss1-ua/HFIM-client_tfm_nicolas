@@ -1,5 +1,5 @@
 /**
- * FIM Exit - Bare-Metal Program Completion Detection
+ * HFIM - FIM Benchmark Header
  *
  * Architecture-agnostic QEMU shutdown for FIM benchmarks.
  *
@@ -13,8 +13,8 @@
  * handles the correct shutdown mechanism per architecture.
  */
 
-#ifndef FIM_EXIT_H
-#define FIM_EXIT_H
+#ifndef HFIM_H
+#define HFIM_H
 
 #include <stdint.h>
 
@@ -68,4 +68,4 @@ void fim_init(void);
  */
 void fim_exit(int code) __attribute__((noreturn));
 
-#endif /* FIM_EXIT_H */
+#endif /* HFIM_H */

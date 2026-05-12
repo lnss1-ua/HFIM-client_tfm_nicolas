@@ -7,7 +7,7 @@
  * previous result.
  */
 
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 256
 

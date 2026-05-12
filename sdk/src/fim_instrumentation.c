@@ -6,7 +6,7 @@
  */
 
 #include <stdint.h>
-#include "fim_exit.h"
+#include "hfim.h"
 
 /**
  * Mark the start of the fault injection window.

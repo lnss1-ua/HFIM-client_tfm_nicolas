@@ -1,0 +1,6 @@
+# FIM Client Configuration
+# Get these from your supervisor
+
+user: your_username        # Your FIM account name
+server: 0.0.0.0            # Server IP address
+ssh_key: ~/.ssh/fim-key    # Path to your SSH private key

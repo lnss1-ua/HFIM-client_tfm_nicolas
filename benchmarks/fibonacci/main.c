@@ -6,7 +6,7 @@
  * all subsequent entries. High SDC propagation rate.
  */
 
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 64
 

@@ -6,7 +6,7 @@
  * source data — tests fault masking in bit-parallel operations.
  */
 
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 128
 

@@ -1,4 +1,4 @@
-#include "fim_exit.h"
+#include "hfim.h"
 
 typedef unsigned char      uint8_t;
 typedef unsigned int       uint32_t;

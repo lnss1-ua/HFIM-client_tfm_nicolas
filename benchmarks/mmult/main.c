@@ -6,7 +6,7 @@
  * result matrix — high SDC surface.
  */
 
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 16
 

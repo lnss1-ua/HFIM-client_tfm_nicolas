@@ -1,4 +1,4 @@
-#include "fim_exit.h"
+#include "hfim.h"
 
 //UART
 #define UART_BASE     0x10000000UL

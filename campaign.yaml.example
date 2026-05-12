@@ -4,32 +4,54 @@
 #           ./run.sh --batch campaign.yaml --background
 #
 # Each campaign inherits from 'defaults' unless overridden.
-# One section per memory campaign (batch handles multiple sections).
+# All fields in 'defaults' can be overridden per campaign.
 
 defaults:
-  arch: riscv64
-  injections: 100
-  fault: register
-  seed: 42
+  arch: riscv64             # Target architecture: riscv64 or aarch64
+  injections: 100           # Number of fault injections per campaign
+  fault: register           # Fault type: register or memory
+  seed: 42                  # PRNG seed for reproducibility
+  # workers: 1              # Parallel QEMU instances (default: 1)
+  # timeout: 60             # Override auto-calculated timeout (seconds)
 
 campaigns:
-  # register faults on mmult
+  # --- Register faults (default) ---
+
+  # Basic register fault campaign on mmult
   - benchmark: mmult
 
-  # memory faults on mmult .bss section
+  # Fewer injections for a quick test
+  - benchmark: fibonacci
+    injections: 50
+
+  # Different seed for comparison (same benchmark, different random sequence)
+  - benchmark: mmult
+    seed: 99
+
+  # --- Memory faults (target specific ELF sections) ---
+
+  # Memory faults on the .bss section (zero-initialized globals)
   - benchmark: mmult
     fault: memory
     section: ".bss"
 
-  # memory faults on mmult .data section
+  # Memory faults on the .data section (initialized globals)
   - benchmark: mmult
     fault: memory
     section: ".data"
 
-  # register faults on fibonacci with fewer injections
-  - benchmark: fibonacci
-    injections: 50
+  # --- Different architectures ---
 
-  # register faults with different seed for reproducibility comparison
+  # Same benchmark compiled and run for aarch64
   - benchmark: mmult
-    seed: 99
+    arch: aarch64
+
+  # --- Combined overrides ---
+
+  # Full custom campaign: aarch64, memory faults, custom seed and count
+  - benchmark: checksum
+    arch: aarch64
+    fault: memory
+    section: ".data"
+    injections: 200
+    seed: 7

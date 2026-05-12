@@ -5,32 +5,31 @@ Write bare-metal benchmarks and run fault injection campaigns on the FIM server.
 ## Setup
 
 1. Get from your supervisor:
-   - SSH private key file (e.g., `fim-enrique`)
-   - Server IP (e.g., `10.25.224.143`)
-   - Your username (e.g., `enrique`)
+   - SSH private key file
+   - Server IP address
+   - Your username
 
 2. Save the key:
    ```bash
-   cp fim-enrique ~/.ssh/fim-enrique
-   chmod 600 ~/.ssh/fim-enrique
+   cp <your-key> ~/.ssh/fim-key
+   chmod 600 ~/.ssh/fim-key
    ```
 
-3. Edit `config.yaml`:
+3. Edit `config.yaml` (see `config.yaml.example`):
    ```yaml
-   user: enrique
-   server: 10.25.224.143
-   ssh_key: ~/.ssh/fim-enrique
-   port: 8765
+   user: <your_username>
+   server: <server_ip>
+   ssh_key: ~/.ssh/fim-key
    ```
 
 4. Test connection:
    ```bash
-   ssh -i ~/.ssh/fim-enrique fim-enrique@10.25.224.143 'fim-run list'
+   ssh -i ~/.ssh/fim-key fim-<your_username>@<server_ip> 'fim-run list'
    ```
 
 ## Running a Campaign
 
-One command does everything — upload, build, golden run, fault injection, download results:
+One command does everything -- upload, build, golden run, fault injection, download results:
 
 ```bash
 ./run.sh benchmarks/mmult -n 20
@@ -43,9 +42,35 @@ Options:
 --workers N           Parallel QEMU instances (default: 1)
 --arch ARCH           riscv64 or aarch64 (default: riscv64)
 --seed N              PRNG seed for reproducibility (default: 42)
+--background          Run in background (check with ./status.sh)
 ```
 
 Results are saved to `results/` on your machine. Server is cleaned automatically.
+
+## Background Mode
+
+For long campaigns, run in background and check later:
+
+```bash
+./run.sh benchmarks/mmult -n 1000 --background
+```
+
+Check status:
+```bash
+./status.sh                 # list all jobs and their status
+./status.sh --download      # download results for completed jobs
+```
+
+## Batch Campaigns
+
+Run multiple campaigns at once from a YAML file:
+
+```bash
+./run.sh --batch campaign.yaml
+./run.sh --batch campaign.yaml --background
+```
+
+The batch file defines multiple campaigns that share defaults. See `campaign.yaml.example` for all options.
 
 ## Writing a Benchmark
 
@@ -58,7 +83,7 @@ cp -r benchmarks/template benchmarks/my_algo
 Edit `benchmarks/my_algo/main.c`:
 
 ```c
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 64
 
@@ -125,12 +150,45 @@ serial_feeder_cmd: "python3 {benchmark_dir}/feeder.py --pty {pty}"
 
 The server auto-installs requirements and runs the feeder alongside QEMU.
 
+## Results
+
+Each campaign produces a results directory like `results/mmult_riscv64_20250511_143022/` containing:
+
+- `summary.json` -- outcome counts (masked, sdc, detected, crash, timeout)
+- `injections.csv` -- per-injection details (register, bit, instruction, outcome)
+- `provenance.json` -- full reproducibility metadata: server version, QEMU commit, toolchain, seed, timing, and your local git commit
+- `source/` -- exact copy of the benchmark source files used for this campaign, so results are always traceable to the code that produced them
+- `server.log` -- server-side execution log
+
+### provenance.json
+
+Every campaign result includes a `provenance.json` that records everything needed to reproduce the run:
+
+```json
+{
+    "benchmark": "mmult",
+    "arch": "riscv64",
+    "injections": 100,
+    "seed": 42,
+    "fault_type": "register",
+    "qemu_version": "8.2.0",
+    "toolchain": "riscv64-unknown-linux-gnu-gcc 13.2.0",
+    "fim_version": "1.0.0",
+    "git_commit": "abc1234",
+    "git_branch": "main",
+    "git_dirty": false
+}
+```
+
+Same seed + same source = same results, every time.
+
 ## Other Commands
 
 ```bash
-./upload.sh benchmarks/my_algo          # upload only
-./download-results.sh                   # list past results
+./upload.sh benchmarks/my_algo          # upload only (no build/run)
+./download-results.sh                   # list past results on server
 ./download-results.sh --all             # download all results
+./build.sh benchmarks/my_algo           # local cross-compile (optional)
 ```
 
 ## Project Structure
@@ -138,12 +196,15 @@ The server auto-installs requirements and runs the feeder alongside QEMU.
 ```
 FIM-client/
   config.yaml                  # your server connection
+  config.yaml.example          # example config with comments
+  campaign.yaml.example        # example batch campaign
   run.sh                       # upload + build + run + download
+  status.sh                    # check background jobs, download results
   upload.sh                    # upload benchmark to server
-  download-results.sh          # pull results
+  download-results.sh          # pull results from server
   build.sh                     # local cross-compile (optional)
   sdk/                         # FIM SDK (don't modify)
-    include/fim_exit.h
+    include/hfim.h             # fim_init() / fim_exit() header
     src/fim_instrumentation.c
     riscv64/                   # startup + linker
     aarch64/
@@ -162,7 +223,7 @@ FIM-client/
 | Outcome | Meaning |
 |---------|---------|
 | **MASKED** | Fault had no effect on the result |
-| **SDC** | Silent Data Corruption — wrong result, undetected |
+| **SDC** | Silent Data Corruption -- wrong result, undetected |
 | **DETECTED** | Benchmark's own error detection caught the fault |
 | **CRASH** | Program crashed |
 | **TIMEOUT** | Execution exceeded time limit |
