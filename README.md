@@ -83,16 +83,18 @@ Get notified when background campaigns finish.
 - BotFather gives you a token like `123456:ABC-xyz` -- save it
 
 **2. Get your chat ID:**
-- Search for `@userinfobot` on Telegram and start a chat
-- It replies with your `Id` -- that's your chat ID
+- Open your new bot in Telegram and send `/start`
+- Then run this in your terminal (replace the token):
+  ```
+  curl -s https://api.telegram.org/bot123456:ABC-xyz/getUpdates | python3 -m json.tool | grep '"id"' | head -1
+  ```
+- The number is your chat ID
 
 **3. Add to config.yaml:**
 ```yaml
 telegram_bot_token: "123456:ABC-xyz"
 telegram_chat_id: "987654321"
 ```
-
-**4. Start a chat with your bot** -- search for it by username and send `/start`. Otherwise it can't message you.
 
 That's it. Background campaigns will send you a summary + CSV when they finish.
 
