@@ -4,3 +4,8 @@
 user: your_username        # Your FIM account name
 server: 0.0.0.0            # Server IP address
 ssh_key: ~/.ssh/fim-key    # Path to your SSH private key
+
+# Telegram notifications (optional)
+# Get notified when background campaigns finish
+# telegram_bot_token: "123456:ABC-xyz"
+# telegram_chat_id: "987654321"

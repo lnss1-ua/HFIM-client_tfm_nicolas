@@ -31,6 +31,16 @@ REMOTE="fim-${USER}@${SERVER}"
 SSH_OPTS="-o StrictHostKeyChecking=no"
 [ -f "$SSH_KEY" ] && SSH_OPTS="$SSH_OPTS -i $SSH_KEY"
 
+# Sync Telegram config to server if configured
+TELEGRAM_TOKEN=$(read_config telegram_bot_token 2>/dev/null || true)
+TELEGRAM_CHAT=$(read_config telegram_chat_id 2>/dev/null || true)
+if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT" ]; then
+    ssh $SSH_OPTS "$REMOTE" "cat > .fim_notify.conf <<EOF
+telegram_bot_token=$TELEGRAM_TOKEN
+telegram_chat_id=$TELEGRAM_CHAT
+EOF" 2>/dev/null
+fi
+
 # Check for --batch mode
 BATCH_FILE=""
 BATCH_BG=""

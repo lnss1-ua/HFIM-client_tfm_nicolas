@@ -1,2 +1,5 @@
 results/
+build/
+*.elf
 *.DS_Store
+config.yaml
