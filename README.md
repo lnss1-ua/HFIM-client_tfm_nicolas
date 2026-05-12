@@ -83,10 +83,10 @@ Get notified when background campaigns finish.
 - BotFather gives you a token like `123456:ABC-xyz` -- save it
 
 **2. Get your chat ID:**
-- Open your new bot in Telegram and send `/start`
-- Then run this in your terminal (replace the token):
+- Search for your bot on Telegram (by the username you chose) and send it any message (e.g., "hello")
+- Then run this in your terminal (replace with your token):
   ```
-  curl -s https://api.telegram.org/bot123456:ABC-xyz/getUpdates | python3 -m json.tool | grep '"id"' | head -1
+  curl -s https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates | python3 -m json.tool | grep '"id"' | head -1
   ```
 - The number is your chat ID
 
