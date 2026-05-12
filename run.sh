@@ -182,6 +182,23 @@ if [ -n "$LATEST" ]; then
     mkdir -p "$LOCAL_RESULTS/${RESULT_NAME}"
     scp $SSH_OPTS "${REMOTE}:${REMOTE_LOGS}/fim.log" "$LOCAL_RESULTS/${RESULT_NAME}/server.log" 2>/dev/null && \
         echo "  Server log saved to: results/${RESULT_NAME}/server.log"
+
+    # Append local git info to provenance (if in a git repo)
+    PROV_FILE="$LOCAL_RESULTS/${RESULT_NAME}/provenance.json"
+    if [ -f "$PROV_FILE" ] && git -C "$SCRIPT_DIR" rev-parse HEAD &>/dev/null; then
+        GIT_COMMIT=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null)
+        GIT_DIRTY=$(git -C "$SCRIPT_DIR" diff --quiet 2>/dev/null && echo "false" || echo "true")
+        GIT_BRANCH=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
+        # Merge git info into provenance.json
+        python3 -c "
+import json
+with open('$PROV_FILE') as f: p = json.load(f)
+p['git_commit'] = '$GIT_COMMIT'
+p['git_branch'] = '$GIT_BRANCH'
+p['git_dirty'] = $GIT_DIRTY
+with open('$PROV_FILE', 'w') as f: json.dump(p, f, indent=4)
+" 2>/dev/null
+    fi
 else
     echo "  No results found to download"
 fi
