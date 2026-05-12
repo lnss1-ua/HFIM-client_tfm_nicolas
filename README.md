@@ -72,6 +72,30 @@ Run multiple campaigns at once from a YAML file:
 
 The batch file defines multiple campaigns that share defaults. See `campaign.yaml.example` for all options.
 
+## Telegram Notifications (optional)
+
+Get notified when background campaigns finish.
+
+**1. Create a bot:**
+- Open Telegram and search for `@BotFather`
+- Send `/newbot`
+- Choose a name (e.g., "FIM Bot") and username (e.g., `my_fim_bot`)
+- BotFather gives you a token like `123456:ABC-xyz` -- save it
+
+**2. Get your chat ID:**
+- Search for `@userinfobot` on Telegram and start a chat
+- It replies with your `Id` -- that's your chat ID
+
+**3. Add to config.yaml:**
+```yaml
+telegram_bot_token: "123456:ABC-xyz"
+telegram_chat_id: "987654321"
+```
+
+**4. Start a chat with your bot** -- search for it by username and send `/start`. Otherwise it can't message you.
+
+That's it. Background campaigns will send you a summary + CSV when they finish.
+
 ## Writing a Benchmark
 
 Copy the template:
