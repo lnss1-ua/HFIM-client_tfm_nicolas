@@ -15,8 +15,8 @@ memory_end:   0x7DFD0
 # fault taxonomy (register, memory, cache_l1d, cache_l1i, cache_l2,
 # dram, tlb, branch_pred, ...). No per-benchmark YAML override needed.
 
-# Phase-2a - AtomicSimpleCPU bypasses the membus timing path, so
-# DRAMsim3 sees zero transactions and emits all-zero stats. Timing
-# CPU drives real DRAM traffic which is what the energy producers
-# need. Cheap on fibonacci (~100k instr).
-cpu_model: "TimingSimpleCPU"
+# Phase-2a note: when running with --mem-backend dramsim3 or nvmain,
+# add `--cpu-model TimingSimpleCPU` on the CLI - AtomicSimpleCPU
+# bypasses the membus and the memory backend sees zero transactions.
+# Default stays AtomicSimpleCPU because register/cache injection
+# campaigns work fine and the timing CPU is slower per instruction.
