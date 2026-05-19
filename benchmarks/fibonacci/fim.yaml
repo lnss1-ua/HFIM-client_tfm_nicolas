@@ -1,6 +1,22 @@
-# FIM benchmark config — fibonacci
+# FIM benchmark config - fibonacci
 # First 64 Fibonacci numbers
 observable_outputs:
   comparison: "exact"
   variables:
     - name: "result"
+      type: "uint64_t[64]"
+
+# Memory injection window: bracket the result[] array (0x7DDD0..0x7DFD0).
+# Used when --fault memory is selected; ignored otherwise.
+memory_start: 0x7DDD0
+memory_end:   0x7DFD0
+
+# Phase-0.95 - schema unified: `./run.sh --fault TYPE` accepts the full
+# fault taxonomy (register, memory, cache_l1d, cache_l1i, cache_l2,
+# dram, tlb, branch_pred, ...). No per-benchmark YAML override needed.
+
+# Phase-2a - AtomicSimpleCPU bypasses the membus timing path, so
+# DRAMsim3 sees zero transactions and emits all-zero stats. Timing
+# CPU drives real DRAM traffic which is what the energy producers
+# need. Cheap on fibonacci (~100k instr).
+cpu_model: "TimingSimpleCPU"
