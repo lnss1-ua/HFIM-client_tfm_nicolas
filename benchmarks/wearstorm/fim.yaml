@@ -1,0 +1,23 @@
+# FIM benchmark config - wearstorm
+# Synthetic NVMain endurance driver: 320K stores to a 32-byte region
+# so BitModel's per-cell worstCaseWrite exceeds EnduranceDistMean=1000.
+# Phase-4b A4.8 stuck_after_wear gate target.
+
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "result"
+      type: "uint8_t[524288]"
+
+# Memory injection window: result[] is 512 kB. Address resolved by
+# the framework via ELF symbol lookup at golden time.
+memory_start: 0x0
+memory_end:   0x80000
+
+# Allow more time per injection; 10M stores under TimingSimpleCPU is
+# slow.
+timeout: 300
+
+# NVMain BitModel needs timing/membus interaction. AtomicSimpleCPU
+# shortcuts the membus and writes never reach NVMain. Use Timing.
+cpu_model: "TimingSimpleCPU"
