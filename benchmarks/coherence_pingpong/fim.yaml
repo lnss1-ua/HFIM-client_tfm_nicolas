@@ -1,0 +1,43 @@
+# FIM benchmark - coherence_pingpong (phase-6 Ruby coherence)
+#
+# Stresses Ruby's TBE / MessageBuffer state with a single-CPU
+# tight loop on a shared volatile + large-stride working-set
+# walk. The pingpong_var symbol is the target for ruby_* fault
+# injection.
+#
+# Build:
+#   ./build.sh benchmarks/coherence_pingpong
+#
+# After build, find the pingpong_var address:
+#   riscv64-unknown-linux-gnu-nm build/coherence_pingpong_riscv64.elf | grep pingpong_var
+# Pass that address as --ruby-target-addr to fim_inject_ruby.py.
+
+observable_outputs:
+  comparison: "exact"
+  variables:
+    - name: "checksum"
+      type: "uint64_t"
+    - name: "pingpong_var"
+      type: "uint64_t"
+
+# Memory injection window: bracket pingpong_var + checksum + working_set.
+# Resolved 2026-05-24 via riscv64-linux-gnu-nm on the server build:
+#   pingpong_var = 0x80000128 (8 B)
+#   checksum     = 0x80000130 (8 B)
+#   working_set  = 0x80000138..0x80010138 (64 KiB)
+# Bracket from pingpong_var through end-of-working_set (round up).
+memory_start: 0x80000128
+memory_end:   0x80010140
+
+# Phase-6: ruby_target_addr defaults to pingpong_var. The injector
+# can also walk message buffers without a fixed address when this
+# is left at 0.
+ruby_target_addr: 0x80000128
+
+# Phase-6 Ruby coherence: run under fim_inject_ruby.py, NOT
+# fim_inject.py. Pick the Ruby gem5.opt build:
+#   gem5_binary: /home/enrique/nv-gem5/build/RISCV_MESI_Two_Level/gem5.opt
+# Default fault_type for this benchmark is ruby_mshr; override via
+# `./run.sh ... --fault ruby_tbe|ruby_directory|ruby_message_buffer`.
+simulator_backend: gem5
+fault_type_default: ruby_mshr
