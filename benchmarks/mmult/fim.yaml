@@ -1,4 +1,4 @@
-# FIM benchmark config — mmult
+# FIM benchmark config - mmult
 # 16x16 integer matrix multiplication
 observable_outputs:
   comparison: "exact"

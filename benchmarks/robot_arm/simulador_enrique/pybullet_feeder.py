@@ -36,7 +36,7 @@ def start_pybullet(fixed_base, initial_position):
         frictionERP=0.2,
     )
 
-    # Load robot URDF — look relative to this script
+    # Load robot URDF - look relative to this script
     urdf_path = os.path.join(SCRIPT_DIR, "urdf", "lite6.urdf")
     if not os.path.exists(urdf_path):
         print(f"[feeder] URDF not found at {urdf_path}", file=sys.stderr)
@@ -74,6 +74,11 @@ def main():
     parser.add_argument("--pty", required=True, help="PTY path from QEMU")
     parser.add_argument("--fixed-base", action="store_true", default=True,
                         help="Use fixed base (default: true)")
+    parser.add_argument("--trajectory-log", default=None,
+                        help="If set, append per-tick CSV "
+                             "(tick,pos0..N,tau0..N) to this path. One row "
+                             "per simulation step. Used by post-mortem "
+                             "trajectory classifier.")
     args = parser.parse_args()
 
     MAX_TAU = 5
@@ -93,6 +98,19 @@ def main():
 
     indices = [1, 2, 4, 5]
     n_active = len(indices)
+
+    traj_log = None
+    if args.trajectory_log:
+        os.makedirs(os.path.dirname(args.trajectory_log) or ".", exist_ok=True)
+        traj_log = open(args.trajectory_log, "w", buffering=1)
+        header = (
+            "tick,"
+            + ",".join(f"pos{i}" for i in range(n_active))
+            + ","
+            + ",".join(f"tau{i}" for i in range(n_active))
+            + "\n"
+        )
+        traj_log.write(header)
 
     p.setJointMotorControlArray(
         robot, indices,
@@ -136,6 +154,16 @@ def main():
         # Anti-windup
         tau = [min(x, MAX_TAU) for x in tau]
 
+        if traj_log is not None:
+            row = (
+                f"{iteration},"
+                + ",".join(f"{v:.6f}" for v in posicion)
+                + ","
+                + ",".join(f"{v:.6f}" for v in tau)
+                + "\n"
+            )
+            traj_log.write(row)
+
         # Apply torques
         p.setJointMotorControlArray(
             robot, indices,
@@ -170,6 +198,8 @@ def main():
         ser.write(b'S')
 
     ser.close()
+    if traj_log is not None:
+        traj_log.close()
 
 
 if __name__ == "__main__":

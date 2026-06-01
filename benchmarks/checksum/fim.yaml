@@ -1,4 +1,4 @@
-# FIM benchmark config — checksum
+# FIM benchmark config - checksum
 # Declares what to observe for SDC detection
 observable_outputs:
   comparison: "exact"

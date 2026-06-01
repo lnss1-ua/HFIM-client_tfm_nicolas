@@ -114,7 +114,7 @@ for c in b.get('campaigns', []):
     exit 0
 fi
 
-# Parse arguments — extract benchmark dir, pass the rest through
+# Parse arguments - extract benchmark dir, pass the rest through
 BENCHMARK_DIR=""
 PASS_ARGS=()
 
