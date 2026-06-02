@@ -31,14 +31,20 @@ which is less precise.
 Which kind of state to corrupt. Default is `register`.
 
 ```yaml
-target_types:
-  - register               # or: memory (or a gem5-only target)
+fault: register            # or: memory (or a gem5-only target)
 ```
+
+One campaign injects one fault type. Keys belong to fault families
+(register / memory / cache), and FIM rejects a config that mixes keys from
+different families - e.g. `fault: register` with a `memory_start` set is an
+error. To sweep several fault types, use a
+[batch campaign](background-jobs.md) with one entry per type.
 
 ### Register target
 
 ```yaml
-target_registers:          # REQUIRED when target is register
+fault: register
+target_registers:          # REQUIRED when fault is register
   - a0
   - fa0
 bit_width: 64              # 8 | 16 | 32 | 64 (default 32)
@@ -49,16 +55,32 @@ Full register list and the float-register gotcha:
 
 ### Memory target
 
+Easiest: name a whole ELF section with `section:` and FIM resolves the
+address range from your ELF automatically.
+
 ```yaml
-target_types:
-  - memory
-memory_start: ".bss"       # REQUIRED - section name, hex string, or int
-memory_end: ".bss"         # REQUIRED
+fault: memory
+section: .bss              # .bss, .data, .rodata, ...
 memory_access_size: 4      # 1 | 2 | 4 | 8 bytes (default 4)
 bit_width: 8               # 8 | 16 | 32 | 64 (default 32)
 ```
 
+Or give an explicit address range instead of a section (use one or the
+other, not both):
+
+```yaml
+fault: memory
+memory_start: "0x80001000"  # section name, hex string, or int
+memory_end:   "0x80002000"  # must be greater than memory_start
+```
+
 Details and section targeting: [Memory Injection](memory-injection.md).
+
+### gem5-only targets
+
+Cache, DRAM, and microarchitecture targets use the same `fault:` key and
+run with `--simulator gem5`, e.g. `fault: cache_l1d`. See
+[gem5 Targets](gem5-targets.md).
 
 ## Fault model
 
@@ -112,7 +134,7 @@ results:
 | `fault_model` | `single_bit_flip`, `stuck_at_0`, `stuck_at_1` |
 | `bit_width` | `8`, `16`, `32`, `64` |
 | `memory_access_size` | `1`, `2`, `4`, `8` |
-| `target_types` | `register`, `memory` (+ gem5-only targets) |
+| `fault` | `register`, `memory`, `cache_l1d`, `cache_l1i`, `cache_l2`, `dram`, ... (gem5 targets in [gem5 Targets](gem5-targets.md)) |
 
 ## See also
 

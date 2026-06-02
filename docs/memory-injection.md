@@ -1,40 +1,36 @@
 # Memory Injection
 
 Memory injection flips a bit in a byte of program memory during the fault
-window, instead of in a register. Enable it with `--fault memory` or in
-`fim.yaml`.
+window, instead of in a register. Select it with `fault: memory` in `fim.yaml`
+(or `--fault memory` on the command line).
 
-## Targeting a range or a section
+## By section (easiest)
 
-You specify the address span with `memory_start` and `memory_end`. Both accept
-three forms:
-
-- an **ELF section name** (starts with `.`), e.g. `.bss`, `.data`
-- a **hex string**, e.g. `"0x80001000"`
-- an **integer** address
-
-### By section (easiest)
-
-Inject anywhere inside a named section. The client resolves the section's
-address range from your ELF automatically:
+Point `section:` at a named ELF section and FIM injects anywhere inside it,
+resolving the address range from your ELF automatically:
 
 ```yaml
-target_types:
-  - memory
-memory_start: ".bss"     # your volatile outputs usually live in .bss or .data
-memory_end: ".bss"
+fault: memory
+section: .bss      # your volatile outputs usually live in .bss or .data
 ```
 
-### By explicit address range
+`section:` accepts any ELF section name (`.bss`, `.data`, `.rodata`, ...). One
+section per campaign; to sweep several, use a
+[batch campaign](background-jobs.md) with one entry per section.
+
+## By explicit address range
+
+When you want a specific span rather than a whole section, give the two ends.
+Each accepts an ELF section name, a hex string, or an integer:
 
 ```yaml
-target_types:
-  - memory
+fault: memory
 memory_start: "0x80001000"
-memory_end: "0x80002000"
+memory_end:   "0x80002000"
 ```
 
-`memory_end` must be greater than `memory_start`.
+`memory_end` must be greater than `memory_start`. Use either `section:` or the
+`memory_start`/`memory_end` pair, not both.
 
 ## Access size
 
@@ -62,10 +58,8 @@ observable_outputs:
   variables:
     - name: "result"
 
-target_types:
-  - memory
-memory_start: ".bss"
-memory_end: ".bss"
+fault: memory
+section: .bss
 memory_access_size: 4
 bit_width: 32
 fault_model: single_bit_flip

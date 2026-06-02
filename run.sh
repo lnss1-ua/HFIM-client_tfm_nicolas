@@ -7,6 +7,13 @@
 #   ./run.sh benchmarks/mmult --fault memory            # memory faults
 #   ./run.sh benchmarks/mmult --workers 4               # 4 parallel QEMU instances
 #   ./run.sh benchmarks/mmult --arch aarch64             # build for aarch64
+#   ./run.sh benchmarks/mmult --follow                  # stream live + download
+#
+# By default a campaign is submitted to the server's always-on gateway + worker
+# fleet and this command returns immediately -- the campaign keeps running after
+# you close the terminal. Check it with ./status.sh (or ./status.sh --watch) and
+# fetch finished results with ./download.sh <id> (or ./download.sh --latest).
+# Use --follow to stream live output and download when it finishes.
 #
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -78,7 +85,10 @@ for c in b.get('campaigns', []):
         BENCH_DIR="$SCRIPT_DIR/benchmarks/$bench"
         if [ -d "$BENCH_DIR" ]; then
             echo "Uploading ${bench}..."
-            scp $SSH_OPTS -r "$BENCH_DIR" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
+            # Source only -- see the non-batch upload note below for why build/
+            # and .build_hash_* are excluded (server rebuilds + owns the golden).
+            rsync -a --exclude 'build/' --exclude '.build_hash_*' \
+                -e "ssh $SSH_OPTS" "$BENCH_DIR" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
         else
             echo "Warning: benchmark ${bench} not found locally, skipping upload"
         fi
@@ -95,8 +105,8 @@ for c in b.get('campaigns', []):
 
     if [ -n "$BATCH_BG" ]; then
         echo ""
-        echo "Check status:     ./status.sh"
-        echo "Download results: ./status.sh --download"
+        echo "Check status:     ./status.sh   (or ./status.sh --watch)"
+        echo "Download results: ./download.sh <id>   (./download.sh --latest)"
     else
         # Download all results
         REMOTE_RESULTS="/srv/fim/users/${USER}/results"
@@ -104,10 +114,20 @@ for c in b.get('campaigns', []):
         mkdir -p "$LOCAL_RESULTS"
         echo ""
         echo "Downloading results..."
-        for dir in $(ssh $SSH_OPTS "$REMOTE" "ls -d ${REMOTE_RESULTS}/*/ 2>/dev/null" | xargs -n1 basename 2>/dev/null); do
-            scp $SSH_OPTS -r "${REMOTE}:${REMOTE_RESULTS}/${dir}" "$LOCAL_RESULTS/"
-            ssh $SSH_OPTS "$REMOTE" "rm -rf ${REMOTE_RESULTS}/${dir}"
-            echo "  $dir"
+        # Only pull result dirs for benchmarks named in THIS batch. The results
+        # dir is shared box-wide; globbing '*/' also matches other users' runs,
+        # whose mode-700 dirs we cannot rm (the loop then aborts mid-download and
+        # our own results never land). Scope to our benchmarks and only rm what
+        # we actually downloaded.
+        for bench in $BENCHMARKS; do
+            for dir in $(ssh $SSH_OPTS "$REMOTE" "ls -d ${REMOTE_RESULTS}/${bench}_*/ 2>/dev/null" | xargs -n1 basename 2>/dev/null); do
+                if scp $SSH_OPTS -r "${REMOTE}:${REMOTE_RESULTS}/${dir}" "$LOCAL_RESULTS/"; then
+                    ssh $SSH_OPTS "$REMOTE" "rm -rf ${REMOTE_RESULTS}/${dir}" 2>/dev/null || true
+                    echo "  $dir"
+                else
+                    echo "  (skipped, download failed) $dir"
+                fi
+            done
         done
         echo "Done."
     fi
@@ -138,7 +158,8 @@ if [ -z "$BENCHMARK_DIR" ]; then
     echo "  --workers N           Parallel QEMU instances (default: 1)"
     echo "  --arch ARCH           riscv64 or aarch64 (default: riscv64)"
     echo "  --seed N              PRNG seed (default: 42)"
-    echo "  --background          Run in background"
+    echo "  --follow              Stream live output + auto-download when done"
+    echo "  --background          Accepted alias for the default (submit + return)"
     echo "  --batch FILE          Run multiple campaigns from YAML config"
     echo ""
     echo "Available benchmarks:"
@@ -151,55 +172,71 @@ fi
 NAME="$(basename "$BENCHMARK_DIR")"
 
 # ── Upload benchmark to server ────────────────────────────────────
+# Ship source only -- the server rebuilds and owns its own build/ + golden.
+# build/ holds a locally-compiled .elf + .build_hash; uploading it would
+# overwrite the server's binary with whatever stale artifact sits on this
+# laptop. The server's golden is keyed off a source hash, not the ELF, so a
+# stale local ELF would silently run without retriggering the golden. rsync
+# --exclude keeps build/ on the laptop; scp -r had no way to exclude it.
 echo "Uploading ${NAME}..."
-scp $SSH_OPTS -r "$BENCHMARK_DIR" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
+upload_benchmark() {  # $1 = local benchmark dir
+    rsync -a --exclude 'build/' --exclude '.build_hash_*' \
+        -e "ssh $SSH_OPTS" "$1" "${REMOTE}:/srv/fim/users/${USER}/benchmarks/"
+}
+upload_benchmark "$BENCHMARK_DIR"
 echo ""
 
-# ── Run on server (build + golden + campaign) ─────────────────────
+# ── Run on server (build + golden + submit campaign) ──────────────
+# The server owns the campaign lifecycle: fim-run builds + runs golden, then
+# submits to the student's always-on gateway + worker fleet, which runs the
+# campaign to completion regardless of this SSH session. By default fim-run
+# submits and returns (fire-and-forget); the campaign keeps running after this
+# command exits. Pass --follow to stream live output instead.
 ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
     sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g'
 
-# If --background, skip download (results not ready yet)
+# Only --follow waits for completion locally; in that case the result tree is
+# ready and we download it now. Otherwise (the default) the campaign is still
+# running server-side: do not download, just tell the student how to retrieve.
+FOLLOWED=false
 for arg in "${PASS_ARGS[@]}"; do
-    if [ "$arg" = "--background" ]; then
-        echo ""
-        echo "Check status:     ./status.sh"
-        echo "Download results: ./status.sh --download"
-        exit 0
-    fi
+    [ "$arg" = "--follow" ] && FOLLOWED=true
 done
 
-# ── Pull results back to local machine ────────────────────────────
+if [ "$FOLLOWED" != true ]; then
+    echo ""
+    echo "Campaign is running on the server fleet (keeps running after this exits)."
+    echo "  Check progress:   ./status.sh   (or ./status.sh --watch)"
+    echo "  Download results: ./download.sh --latest   (or ./download.sh <id>)"
+    exit 0
+fi
+
+# ── --follow: campaign finished, pull its result tree ─────────────
 REMOTE_RESULTS="/srv/fim/users/${USER}/results"
 LOCAL_RESULTS="$SCRIPT_DIR/results"
 mkdir -p "$LOCAL_RESULTS"
 
 echo ""
 echo "Downloading results..."
-# Find the latest result directory for this benchmark
 LATEST=$(ssh $SSH_OPTS "$REMOTE" "ls -1d ${REMOTE_RESULTS}/${NAME}_* 2>/dev/null | sort | tail -1")
 if [ -n "$LATEST" ]; then
     RESULT_NAME=$(basename "$LATEST")
     scp $SSH_OPTS -r "${REMOTE}:${LATEST}" "$LOCAL_RESULTS/"
     echo "  Saved to: results/${RESULT_NAME}/"
 
-    # Clean up results on server
     ssh $SSH_OPTS "$REMOTE" "rm -rf ${LATEST}"
     echo "  Cleaned server copy"
 
-    # Also pull logs
     REMOTE_LOGS="/srv/fim/users/${USER}/logs"
     mkdir -p "$LOCAL_RESULTS/${RESULT_NAME}"
     scp $SSH_OPTS "${REMOTE}:${REMOTE_LOGS}/fim.log" "$LOCAL_RESULTS/${RESULT_NAME}/server.log" 2>/dev/null && \
         echo "  Server log saved to: results/${RESULT_NAME}/server.log"
 
-    # Append local git info to provenance (if in a git repo)
     PROV_FILE="$LOCAL_RESULTS/${RESULT_NAME}/provenance.json"
     if [ -f "$PROV_FILE" ] && git -C "$SCRIPT_DIR" rev-parse HEAD &>/dev/null; then
         GIT_COMMIT=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null)
         GIT_DIRTY=$(git -C "$SCRIPT_DIR" diff --quiet 2>/dev/null && echo "false" || echo "true")
         GIT_BRANCH=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
-        # Merge git info into provenance.json
         python3 -c "
 import json
 with open('$PROV_FILE') as f: p = json.load(f)
