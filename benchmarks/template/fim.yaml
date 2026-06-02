@@ -20,7 +20,18 @@ observable_outputs:
 # Uncomment to override default timeout (auto-calculated from golden run)
 # timeout: 60
 
-# Uncomment for memory fault injection (default is register)
-# target_types: [memory]
-# memory_start: ".data"    # Target ELF section start
-# memory_end: ".bss"       # Target ELF section end
+# Fault type (default: register). One campaign injects one fault type;
+# to run several, use a batch file (one entry each). See docs/.
+# fault: register
+
+# Memory faults: pick a whole ELF section with `section:` ...
+# fault: memory
+# section: .bss            # .bss, .data, .rodata, ...
+
+# ... or an explicit address range instead of a section:
+# fault: memory
+# memory_start: "0x80001000"
+# memory_end:   "0x80002000"
+
+# gem5-only targets (cache, dram, microarchitecture) use the same `fault:`
+# key, e.g. `fault: cache_l1d` with `--simulator gem5`. See docs/gem5-targets.md.

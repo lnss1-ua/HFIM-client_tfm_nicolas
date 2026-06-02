@@ -40,6 +40,20 @@ campaigns:
     fault: memory
     section: ".data"
 
+  # --- gem5-only faults (cache / dram / microarchitecture) ---
+  # These require --simulator gem5 and use the same `fault:` key.
+  # One fault type per entry; do not mix register/memory/cache keys.
+
+  # L1 data-cache bit flip on mmult
+  - benchmark: mmult
+    simulator: gem5
+    fault: cache_l1d
+
+  # DRAM bit flip on mmult
+  - benchmark: mmult
+    simulator: gem5
+    fault: dram
+
   # --- Different architectures ---
 
   # Same benchmark compiled and run for aarch64

@@ -1,8 +1,9 @@
 # Results
 
-`run.sh` downloads results automatically when a campaign finishes. They land in
-`results/<campaign>/` on your machine. You can also pull past runs by hand with
-`download-results.sh`.
+`run.sh --follow` downloads results automatically when a campaign finishes. They
+land in `results/<campaign>/` on your machine. For fire-and-forget runs (the
+default), pull them by hand with `download.sh` once `status.sh` shows the
+campaign done.
 
 ## Outcome classes
 
@@ -34,6 +35,9 @@ results/<campaign>/
   provenance.json      # what was run, with what tooling
   faultlist.json       # the generated fault list (reproducible from the seed)
   server.log           # server-side log for this run
+  source/              # the benchmark source as it was run
+    build/
+      <bench>_<arch>.elf  # the exact binary the campaign injected into
   injections/
     0001/
       output.txt       # captured UART output
@@ -42,27 +46,37 @@ results/<campaign>/
     ...
 ```
 
+The summary download (no `--full`) brings down everything above except the
+`injections/` subtree. The captured `.elf` ships inside `source/build/` so the
+exact binary the campaign injected into travels with its results.
+
 Per-injection files (like a feeder's `trajectory.csv`) sit in
 `injections/NNNN/`, keyed by the same index used in `injections.csv`, so each
 artefact is unambiguously tied to its fault.
 
-## download-results.sh
+## download.sh
 
 ```bash
-./download-results.sh                          # list past results on the server
-./download-results.sh <campaign>               # download one campaign
-./download-results.sh <campaign> --with-golden # campaign + its paired golden run
-./download-results.sh --all                    # download every campaign
+./download.sh <id-or-prefix>          # download one campaign (summary only)
+./download.sh --latest                # download the most recent completed campaign
+./download.sh <id> --full             # also pull the per-injection injections/ tree
+./download.sh <id> --with-golden      # also pull this campaign's golden reference
+./download.sh <id> --purge            # delete the server copy after a good fetch
 
-./download-results.sh --list-golden            # list golden dirs on the server
-./download-results.sh --golden <name>          # download one golden dir
-./download-results.sh --golden-all             # download every golden dir
+./download.sh --list-golden           # list golden dirs on the server
+./download.sh --golden <name>         # download one golden dir
+./download.sh --golden-all            # download every golden dir
 ```
+
+You name WHICH campaign to pull: an exact id, a unique prefix of one, or
+`--latest`. An ambiguous prefix is refused (the candidates are listed) so you
+never download the wrong run. Run `status.sh` to see ids.
 
 Campaign results go to `results/<campaign>/`; golden runs go to
 `golden/<name>/`. Use `--with-golden` when you want to diff a per-injection
 artefact (e.g. `injections/0001/trajectory.csv`) against the golden baseline
-(`golden/.../trajectory.csv`) - both trees come down together.
+(`golden/.../trajectory.csv`) - both trees come down together. The server copy
+is kept by default; pass `--purge` to remove it after a successful fetch.
 
 ## See also
 

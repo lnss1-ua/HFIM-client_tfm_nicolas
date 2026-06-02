@@ -59,12 +59,6 @@ simulator) can produce a different instruction timeline run-to-run even at the
 same seed. For such benchmarks, set a fixed `timeout` in `fim.yaml` rather than
 relying on a golden-derived one. See [Serial Feeder](serial-feeder.md).
 
-## Upload without running
-
-```bash
-./upload.sh benchmarks/my_algo
-```
-
 ## See also
 
 - [Writing Benchmarks](writing-benchmarks.md)

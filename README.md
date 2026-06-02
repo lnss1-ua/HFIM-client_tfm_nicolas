@@ -29,7 +29,7 @@ injects faults, and downloads the results, all from one command.
 | [Register Injection](docs/register-injection.md) | Register sets, the float-register gotcha |
 | [Memory Injection](docs/memory-injection.md) | Address ranges and ELF-section targeting |
 | [Serial Feeder](docs/serial-feeder.md) | External simulators, per-fault trajectory files |
-| [Results](docs/results.md) | Output layout, outcome classes, `download-results.sh` |
+| [Results](docs/results.md) | Output layout, outcome classes, `download.sh` |
 | [Advanced (gem5) Targets](docs/gem5-targets.md) | Cache / DRAM / microarchitecture injection |
 
 ## Key rules (the short version)
@@ -56,14 +56,14 @@ injects faults, and downloads the results, all from one command.
 
 ```
 config.yaml            your server connection (from config.yaml.example)
-run.sh                 upload + build + golden + campaign + download
-status.sh              check background jobs, download finished results
-upload.sh              upload a benchmark only
-download-results.sh    pull past results / golden runs
-build.sh               local cross-compile (optional)
+run.sh                 upload + build + golden + run a campaign
+status.sh              check running campaigns (status-only, --watch to poll)
+download.sh            pull a finished campaign (and golden, with --with-golden)
+build.sh               local cross-compile (optional; the server builds on run)
 campaign.yaml.example  example batch campaign
 sdk/                   FIM SDK (don't modify)
 benchmarks/            your benchmarks (start from template/)
 results/               downloaded campaign results
+golden/                downloaded golden references
 docs/                  this documentation
 ```
