@@ -35,6 +35,34 @@ target_registers:
   - ft0
 ```
 
+## Autodetect: `target_registers: auto`
+
+Instead of hand-listing registers, let FIM read your ELF and target only the
+registers the program actually uses. It disassembles the binary and keeps the
+distinct ABI registers that appear:
+
+```yaml
+target_registers: auto
+include_int: true        # default true  - a0..a7, s0..s11, t0..t6
+include_floats: false    # default false - fa*, fs*, ft*
+```
+
+The two booleans apply **only** to `auto` (they are ignored, with a warning,
+if you also give an explicit list):
+
+| `include_int` | `include_floats` | Pool |
+| --- | --- | --- |
+| true (default) | false (default) | integer registers the ELF uses |
+| true | true | integer + float registers the ELF uses |
+| false | true | only the float registers the ELF uses |
+| false | false | rejected (selects nothing) |
+
+`auto` targets computation registers only - `ra`/`sp`/`gp`/`tp`/`fp` are
+deliberately excluded. For float-heavy code, the cleanest fix to the
+masked-fault problem above is `target_registers: auto` with
+`include_floats: true`. The number of injections (`-n`) stays under your
+control; `auto` only chooses the register pool, not the count.
+
 ## Valid RISC-V64 register names
 
 **Integer (x1-x31; `x0` is hardwired zero and cannot be injected):**
