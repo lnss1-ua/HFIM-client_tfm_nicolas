@@ -44,13 +44,22 @@ error. To sweep several fault types, use a
 
 ```yaml
 fault: register
-target_registers:          # REQUIRED when fault is register
+target_registers:          # REQUIRED when fault is register: a list, or 'auto'
   - a0
   - fa0
 bit_width: 64              # 8 | 16 | 32 | 64 (default 32)
 ```
 
-Full register list and the float-register gotcha:
+Or autodetect the registers the ELF actually uses:
+
+```yaml
+fault: register
+target_registers: auto
+include_int: true          # default true  - integer GPRs (applies only to auto)
+include_floats: false      # default false - float registers (applies only to auto)
+```
+
+Full register list, the `auto` truth table, and the float-register gotcha:
 [Register Injection](register-injection.md).
 
 ### Memory target
@@ -60,10 +69,14 @@ address range from your ELF automatically.
 
 ```yaml
 fault: memory
-section: .bss              # .bss, .data, .rodata, ...
+section: .bss              # .bss, .data, .rodata, .stack, ...
 memory_access_size: 4      # 1 | 2 | 4 | 8 bytes (default 4)
 bit_width: 8               # 8 | 16 | 32 | 64 (default 32)
 ```
+
+`section: .stack` is special-cased for bare-metal C906 ELFs (resolved from the
+linker's `__stack_bottom`/`__stack_top` symbols). See
+[Memory Injection](memory-injection.md).
 
 Or give an explicit address range instead of a section (use one or the
 other, not both):

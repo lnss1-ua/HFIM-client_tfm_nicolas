@@ -18,6 +18,22 @@ section: .bss      # your volatile outputs usually live in .bss or .data
 section per campaign; to sweep several, use a
 [batch campaign](background-jobs.md) with one entry per section.
 
+### The stack (`section: .stack`)
+
+```yaml
+fault: memory
+section: .stack
+```
+
+Bare-metal C906 ELFs do not emit a real `.stack` section header - the stack is
+reserved by the linker between `__stack_bottom` and `__stack_top`. FIM resolves
+`.stack` to that range from the linker symbols automatically (and prefers a real
+`.stack` section header if one exists). Recognised symbol pairs:
+`__stack_bottom`/`__stack_top`, `_stack_bottom`/`_stack_top`,
+`__stack_start`/`__stack_end`, `_estack_bottom`/`_estack`. If your ELF has none
+of these and no `.stack` header, give a numeric `memory_start`/`memory_end` for
+the stack region instead.
+
 ## By explicit address range
 
 When you want a specific span rather than a whole section, give the two ends.
