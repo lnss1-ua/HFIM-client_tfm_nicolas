@@ -16,7 +16,7 @@ section: .bss      # your volatile outputs usually live in .bss or .data
 
 `section:` accepts any ELF section name (`.bss`, `.data`, `.rodata`, ...). One
 section per campaign; to sweep several, use a
-[batch campaign](background-jobs.md) with one entry per section.
+[batch campaign](batch-campaigns.md) with one entry per section.
 
 ### The stack (`section: .stack`)
 

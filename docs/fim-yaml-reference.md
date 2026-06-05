@@ -38,7 +38,7 @@ One campaign injects one fault type. Keys belong to fault families
 (register / memory / cache), and FIM rejects a config that mixes keys from
 different families - e.g. `fault: register` with a `memory_start` set is an
 error. To sweep several fault types, use a
-[batch campaign](background-jobs.md) with one entry per type.
+[batch campaign](batch-campaigns.md) with one entry per type.
 
 ### Register target
 

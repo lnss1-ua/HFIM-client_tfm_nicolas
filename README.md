@@ -23,7 +23,8 @@ injects faults, and downloads the results, all from one command.
 | [Setup](docs/setup.md) | Connect the client to the server |
 | [Writing Benchmarks](docs/writing-benchmarks.md) | `main.c` rules, the fault window, observables |
 | [Running Campaigns](docs/running-campaigns.md) | `run.sh`, CLI flags, parallel workers, seeds |
-| [Background Jobs](docs/background-jobs.md) | `--background`, `status.sh`, batch campaigns |
+| [Background Jobs](docs/background-jobs.md) | `--background`, `status.sh`, the submit/download lifecycle |
+| [Batch Campaigns](docs/batch-campaigns.md) | Run a whole sweep from one YAML file |
 | [Notifications](docs/notifications.md) | Telegram alerts when a background run finishes |
 | [fim.yaml Reference](docs/fim-yaml-reference.md) | Every config field and its allowed values |
 | [Register Injection](docs/register-injection.md) | Register sets, the float-register gotcha |
