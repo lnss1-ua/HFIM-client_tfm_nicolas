@@ -70,6 +70,15 @@ An ambiguous prefix (matching more than one campaign) is refused and the
 candidates are listed, so you never download the wrong run. Use `status.sh` to
 see the ids.
 
+### About the campaign id
+
+Ids look long because they are built to never collide:
+`<benchmark>_<arch>_<date>_<time>_<micros>_<short-uuid>`, e.g.
+`robot_arm_riscv64_20260605_183047_509126_57e7db`. You almost never type the
+whole thing - any unique fragment works, so the trailing `57e7db` (or even
+`robot_arm_riscv`) is enough as long as it matches exactly one run. When in
+doubt, `--latest` grabs the most recent completed campaign with no id at all.
+
 ### Summary vs full
 
 By default `download.sh` pulls a **summary**: enough to read the outcome without
