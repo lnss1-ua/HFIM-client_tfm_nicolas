@@ -68,3 +68,20 @@ results/               downloaded campaign results
 golden/                downloaded golden references
 docs/                  this documentation
 ```
+
+## Citation
+
+If you use HFIM in academic work, please cite it. Machine-readable metadata
+lives in `CITATION.cff` (GitHub renders a "Cite this repository" button from
+it). BibTeX:
+
+```bibtex
+@software{hfim,
+  title   = {{HFIM: Hardware Fault Injection Manager}},
+  author  = {Cuenca-Asensi, S. and Abma-Romero, E. and Serrano-Cases, A.},
+  year    = {2026},
+  url     = {https://github.com/HI-REST/HFIM-client},
+  version = {0.1.0},
+  note    = {Universidad de Alicante}
+}
+```

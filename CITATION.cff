@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: "HFIM: Hardware Fault Injection Manager"
+message: "If you use this software in academic work, please cite it as below."
+type: software
+authors:
+  - given-names: S.
+    family-names: Cuenca-Asensi
+    affiliation: "Universidad de Alicante"
+  - given-names: E.
+    family-names: Abma-Romero
+    affiliation: "Universidad de Alicante"
+  - given-names: A.
+    family-names: Serrano-Cases
+    affiliation: "Universidad de Alicante"
+abstract: >-
+  HFIM is a multi-user research framework for automated fault-injection
+  campaigns on RISC-V (Xuantie C906) and aarch64 baremetal applications.
+  It runs a deterministic, seed-replayable pipeline (compile, golden,
+  N injections, classification, report) against a QEMU (GDB/QMP) or a
+  gem5 (FIMController SimObject) backend, supporting register, memory,
+  cache-line and ECC check-bit fault targets.
+keywords:
+  - fault injection
+  - soft errors
+  - RISC-V
+  - gem5
+  - QEMU
+  - reliability
+license: "TODO" # e.g. MIT, GPL-3.0; README states 'academic use'
+repository-code: "https://github.com/HI-REST/HFIM-client"
+version: "0.1.0" # TODO: keep in sync with releases
+date-released: "2026-06-12" # TODO: set to the cited release date
