@@ -7,8 +7,10 @@ the default target, so `--fault register` is implied unless you say otherwise.
 
 If you do **not** set `target_registers`, FIM uses an integer-only default set.
 
-**RISC-V64 default:** `a0`-`a7`, `s0`-`s11`, `t0`-`t6` (general-purpose only,
-no float registers).
+**RISC-V64 default:** `a0`-`a7`, `s0`-`s11`, `t0`-`t6` (computation registers
+only, no float and no control/pointer registers). This is the fallback when you
+set neither `target_registers` nor `auto`; `auto` casts a wider net (see
+[Autodetect](#autodetect-target_registers-auto) below).
 
 This matters: **for float-heavy code, the default set will report mostly
 MASKED.** A PID controller, a DSP kernel, or anything doing real arithmetic
@@ -43,7 +45,7 @@ distinct ABI registers that appear:
 
 ```yaml
 target_registers: auto
-include_int: true        # default true  - a0..a7, s0..s11, t0..t6
+include_int: true        # default true  - every integer GPR (a*, s*, t*, ra, sp, gp, tp, fp)
 include_floats: false    # default false - fa*, fs*, ft*
 ```
 
@@ -57,11 +59,14 @@ if you also give an explicit list):
 | false | true | only the float registers the ELF uses |
 | false | false | rejected (selects nothing) |
 
-`auto` targets computation registers only - `ra`/`sp`/`gp`/`tp`/`fp` are
-deliberately excluded. For float-heavy code, the cleanest fix to the
-masked-fault problem above is `target_registers: auto` with
-`include_floats: true`. The number of injections (`-n`) stays under your
-control; `auto` only chooses the register pool, not the count.
+`auto` targets the **whole integer register file** - the computation registers
+(`a*`, `s*`, `t*`) and the control/pointer registers (`ra`, `sp`, `gp`, `tp`,
+`fp`) alike. Flipping `ra`/`sp` tends to CRASH rather than produce an SDC, but
+that is your call as the study designer, not something the framework decides
+for you. For float-heavy code, the cleanest fix to the masked-fault problem
+above is `target_registers: auto` with `include_floats: true`. The number of
+injections (`-n`) stays under your control; `auto` only chooses the register
+pool, not the count.
 
 ## Valid RISC-V64 register names
 
