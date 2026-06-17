@@ -44,9 +44,10 @@ error. To sweep several fault types, use a
 
 ```yaml
 fault: register
-target_registers:          # REQUIRED when fault is register: a list, or 'auto'
+target_registers:          # a list of register names (or set auto_registers)
   - a0
   - fa0
+  - pc                     # pc is allowed explicitly (not a GPR; never autodetected)
 bit_width: 64              # 8 | 16 | 32 | 64 (default 32)
 ```
 
@@ -54,13 +55,19 @@ Or autodetect the registers the ELF actually uses:
 
 ```yaml
 fault: register
-target_registers: auto
-include_int: true          # default true  - integer GPRs (applies only to auto)
-include_floats: false      # default false - float registers (applies only to auto)
+auto_registers: true       # autodetect the GPR pool from the ELF
+include_int: true          # default true  - integer GPRs (applies only to autodetect)
+include_floats: false      # default false - float registers (applies only to autodetect)
+target_registers:          # optional: extras unioned onto the autodetected pool
+  - pc
 ```
 
-Full register list, the `auto` truth table, and the float-register gotcha:
-[Register Injection](register-injection.md).
+`target_registers` is required unless `auto_registers: true` is set. The legacy
+`target_registers: auto` string still works but is deprecated in favor of
+`auto_registers: true`.
+
+Full register list, the autodetect truth table, `pc` behavior, and the
+float-register gotcha: [Register Injection](register-injection.md).
 
 ### Memory target
 
