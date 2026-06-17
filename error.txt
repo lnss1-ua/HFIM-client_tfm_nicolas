@@ -1,0 +1,138 @@
+Uploading robot_arm...
+
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+── Installing Python dependencies...
+
+[notice] A new release of pip is available: 26.1.1 -> 26.1.2
+[notice] To update, run: .venv/bin/python3 -m pip install --upgrade pip
+
+── Building robot_arm for riscv64...
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+Up to date: robot_arm_riscv64.elf (no source changes)
+
+Symbols:
+0000000080000440 B __bss_start
+0000000080000000 T _start
+0000000080000044 T fim_exit
+0000000080000034 T fim_init
+0000000080000144 T main
+
+Size: 14120 bytes
+
+── Submitting campaign...
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+Running campaign: robot_arm (5 injections, register, 1 workers)
+[2026-06-04T21:06:58] INFO: FIM logging initialized: log_dir=logs, level=INFO
+[2026-06-04T21:06:58] INFO: FIM logging initialized: log_dir=logs, level=INFO
+[2026-06-04T21:06:58] INFO: ================================================================================
+[2026-06-04T21:06:58] INFO: FIM CAMPAIGN RUNNER
+[2026-06-04T21:06:58] INFO: ================================================================================
+[2026-06-04T21:06:58] INFO: Configuration: campaign_wjw1ghvd.yaml
+[2026-06-04T21:06:58] INFO: Benchmark: robot_arm_riscv64
+[2026-06-04T21:06:58] INFO: Seed: 42
+[2026-06-04T21:06:58] INFO: Injections: 5
+[2026-06-04T21:06:58] INFO: Fault model: single_bit_flip
+[2026-06-04T21:06:58] INFO: ================================================================================
+[2026-06-04T21:06:58] INFO: Creating register fault injection campaign
+[2026-06-04T21:06:58] INFO: Initializing campaign: None [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Campaign ID: robot_arm_riscv64_20260604_210658_857188 [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Target registers: x10, x11, x12, x13, x14, x15, x8, x9, x18, x19, x5, x6, x7, f10, f11, f12, f13, f14, f15, f16, f17, f8, f9, f18, f19, f0, f1, f2, f3, f4, f5 (31 total) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Setting up campaign infrastructure [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Found icount plugin: libicount_breakpoint.so [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Initializing QEMU controller (gdb_port=1234 qmp_port=4444) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Initializing GDB controller [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Checkpoint directory: golden/robot_arm_riscv64_qemu/robot_arm_riscv64/checkpoints
+[2026-06-04T21:06:58] INFO: Initializing PRNG with seed: 42 [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Fault model: single_bit_flip [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Output directory: results/robot_arm_riscv64_20260604_210658_857188 [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Loaded instruction counts: total=1295829, fim_init=1169085 [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Campaign setup complete [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:58] INFO: Campaign ID: robot_arm_riscv64_20260604_210658_857188
+[2026-06-04T21:06:58] INFO: Output directory: results/robot_arm_riscv64_20260604_210658_857188
+[2026-06-04T21:06:58] INFO: Collecting provenance fingerprints...
+[2026-06-04T21:06:59] INFO: Loading golden run reference data...
+[2026-06-04T21:06:59] INFO: Loaded golden data from: golden/robot_arm_riscv64_qemu
+[2026-06-04T21:06:59] INFO: Loaded golden state: 4 variables, 0 memory regions
+[2026-06-04T21:06:59] INFO: Loaded observable state: 4 variables, 0 memory regions
+[2026-06-04T21:06:59] INFO: Using variable-based SDC detection
+[2026-06-04T21:06:59] INFO: Comparison mode: variable-based
+[2026-06-04T21:06:59] INFO: Generating faultlist with 5 entries [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:59] INFO: Faultlist generated: 5 entries [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:59] INFO: Faultlist saved to: results/robot_arm_riscv64_20260604_210658_857188/faultlist.json [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:06:59] INFO: Starting sequential execution: 5 injections
+[2026-06-04T21:07:00] INFO: Icount mode: target=1252895, trigger=/tmp/fim_8nhrnsqv.trigger [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:01] INFO: Trigger detected, pausing VM via QMP [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:03] INFO: GDB stop after QMP pause: stop_reason=signal-received [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:03] INFO: Icount mode: CPU paused at PC=0x800000aa (target_instruction=1252895) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:03] INFO: Auto-resolved state_capture_function to fim_exit (0x80000044) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:04] INFO: Starting serial feeder: .venv/bin/python3 benchmarks/robot_arm/simulador_enrique/pybullet_feeder.py --pty /dev/pts/0 --trajectory-log results/robot_arm_riscv64_20260604_210658_857188/injections/0001/trajectory.csv [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:09] INFO: Icount mode: target=1266281, trigger=/tmp/fim_s_6pbdqm.trigger [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:09] INFO: Trigger detected, pausing VM via QMP [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:11] INFO: GDB stop after QMP pause: stop_reason=signal-received [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:11] INFO: Icount mode: CPU paused at PC=0x800000aa (target_instruction=1266281) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:12] INFO: Auto-resolved state_capture_function to fim_exit (0x80000044) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:12] INFO: Starting serial feeder: .venv/bin/python3 benchmarks/robot_arm/simulador_enrique/pybullet_feeder.py --pty /dev/pts/0 --trajectory-log results/robot_arm_riscv64_20260604_210658_857188/injections/0002/trajectory.csv [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:17] INFO: Icount mode: target=1198341, trigger=/tmp/fim_87u1v25e.trigger [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:17] INFO: Trigger detected, pausing VM via QMP [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:19] INFO: GDB stop after QMP pause: stop_reason=signal-received [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:20] INFO: Icount mode: CPU paused at PC=0x800000aa (target_instruction=1198341) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:20] INFO: Auto-resolved state_capture_function to fim_exit (0x80000044) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:07:20] INFO: Starting serial feeder: .venv/bin/python3 benchmarks/robot_arm/simulador_enrique/pybullet_feeder.py --pty /dev/pts/0 --trajectory-log results/robot_arm_riscv64_20260604_210658_857188/injections/0003/trajectory.csv [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:27] INFO: Icount mode: target=1257781, trigger=/tmp/fim_0v5v2264.trigger [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:27] INFO: Trigger detected, pausing VM via QMP [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:29] INFO: GDB stop after QMP pause: stop_reason=signal-received [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:30] INFO: Icount mode: CPU paused at PC=0x800000aa (target_instruction=1257781) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:30] INFO: Auto-resolved state_capture_function to fim_exit (0x80000044) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:30] INFO: Starting serial feeder: .venv/bin/python3 benchmarks/robot_arm/simulador_enrique/pybullet_feeder.py --pty /dev/pts/0 --trajectory-log results/robot_arm_riscv64_20260604_210658_857188/injections/0004/trajectory.csv [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:35] INFO: Icount mode: target=1246482, trigger=/tmp/fim_i7f9z6ud.trigger [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:36] INFO: Trigger detected, pausing VM via QMP [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:38] INFO: GDB stop after QMP pause: stop_reason=signal-received [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:38] INFO: Icount mode: CPU paused at PC=0x800000aa (target_instruction=1246482) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:38] INFO: Auto-resolved state_capture_function to fim_exit (0x80000044) [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:38] INFO: Starting serial feeder: .venv/bin/python3 benchmarks/robot_arm/simulador_enrique/pybullet_feeder.py --pty /dev/pts/0 --trajectory-log results/robot_arm_riscv64_20260604_210658_857188/injections/0005/trajectory.csv [campaign=robot_arm_riscv64_20260604_210658_857188]
+[2026-06-04T21:09:42] INFO: Progress: 5/5
+[2026-06-04T21:09:42] INFO: Campaign execution complete: 5 injections
+[2026-06-04T21:09:42] INFO: Total execution time: 163.23s
+[2026-06-04T21:09:42] INFO: Average time per injection: 32.645s
+[2026-06-04T21:09:42] INFO: Classifying injection outcomes...
+[2026-06-04T21:09:42] INFO: Outcome classification complete:
+[2026-06-04T21:09:42] INFO:   MASKED: 4 (80.0%)
+[2026-06-04T21:09:42] INFO:   TIMEOUT: 1 (20.0%)
+[2026-06-04T21:09:42] INFO: Writing state.json files for SDC outcomes...
+[2026-06-04T21:09:42] INFO: State files written: 0 SDC outcomes, 5 skipped (masked/timeout/crash)
+[2026-06-04T21:09:42] INFO: Saving results to CSV...
+[2026-06-04T21:09:42] INFO: Results saved to: results/robot_arm_riscv64_20260604_210658_857188/injections.csv
+[2026-06-04T21:09:42] INFO: Total rows: 5
+[2026-06-04T21:09:42] INFO: Generating consolidated TSV report...
+[2026-06-04T21:09:42] INFO: TSV report saved to: results/robot_arm_riscv64_20260604_210658_857188/report.tsv
+[2026-06-04T21:09:42] INFO: Total rows: 5
+[2026-06-04T21:09:42] INFO: Generating results summary...
+[2026-06-04T21:09:42] INFO: Results summary saved to: results/robot_arm_riscv64_20260604_210658_857188/results.txt
+[2026-06-04T21:09:42] INFO: Finalizing provenance manifest...
+[2026-06-04T21:09:42] INFO: Provenance saved to: results/robot_arm_riscv64_20260604_210658_857188/provenance.json
+[2026-06-04T21:09:42] INFO: Manifest hash: 7f99527c60197dddace2d4c3b12f478e8d0c4e25425c0c9f92e37f0771fbfffd
+[2026-06-04T21:09:42] INFO: 
+[2026-06-04T21:09:42] INFO: ================================================================================
+[2026-06-04T21:09:42] INFO: CAMPAIGN SUMMARY
+[2026-06-04T21:09:42] INFO: ================================================================================
+[2026-06-04T21:09:42] INFO: Total injections: 5
+[2026-06-04T21:09:42] INFO: 
+[2026-06-04T21:09:42] INFO: Outcome distribution:
+[2026-06-04T21:09:42] INFO:   MASKED      :     4 ( 80.0%)
+[2026-06-04T21:09:42] INFO:   TIMEOUT     :     1 ( 20.0%)
+[2026-06-04T21:09:42] INFO: 
+[2026-06-04T21:09:42] INFO: ================================================================================
+[2026-06-04T21:09:42] INFO: CAMPAIGN COMPLETE: robot_arm_riscv64_20260604_210658_857188
+[2026-06-04T21:09:42] INFO: Results saved to: results/robot_arm_riscv64_20260604_210658_857188
+[2026-06-04T21:09:42] INFO: ================================================================================
+
+Campaign complete: robot_arm_riscv64_20260604_210658_857188
+Results: results/robot_arm_riscv64_20260604_210658_857188/injections.csv
+
+
+Results saved to: results/
+
+Campaign is running on the server fleet (keeps running after this exits).
+  Check progress:   ./status.sh   (or ./status.sh --watch)
+  Download results: ./download.sh --latest   (or ./download.sh <id>)

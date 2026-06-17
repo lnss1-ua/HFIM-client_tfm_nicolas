@@ -1,0 +1,40 @@
+# FIM Batch Campaign Configuration
+#
+# Run with: ./run.sh --batch campaign.yaml
+#           ./run.sh --batch campaign.yaml --background
+#
+# Each campaign inherits from 'defaults' unless overridden.
+# All fields in 'defaults' can be overridden per campaign.
+
+defaults:
+  arch: riscv64             # Target architecture = riscv64 or aarch64
+  injections: 65           # Number of fault injections per campaign
+  fault: register           # Fault type = register or memory
+  seed: 42                  # PRNG seed for reproducibility
+  # workers: 1              # Parallel QEMU instances (default: 1)
+  # timeout: 60             # Override auto-calculated timeout (seconds)
+
+campaigns:
+  # --- Register faults (default) ---
+
+  # Basic register fault campaign on robot_arm
+  #- benchmark: robot_arm
+  #  arch: riscv64             # Target architecture = riscv64 or aarch64
+  #  injections: 200           # Number of fault injections per campaign
+  #  fault: register           # Fault type = register or memory
+  #  seed: 12                  # PRNG seed for reproducibility
+  
+  #- benchmark: robot_arm
+  #  arch: riscv64             # Target architecture = riscv64 or aarch64
+  #  injections: 1000           # Number of fault injections per campaign
+  #  fault: memory           # Fault type = register or memory
+  #  seed: 12                  # PRNG seed for reproducibility
+  #  section: .stack	# .stack, .bss, 
+    
+  - benchmark: robot_arm
+    arch: riscv64             # Target architecture = riscv64 or aarch64
+    injections: 1000           # Number of fault injections per campaign
+    fault: memory           # Fault type = register or memory
+    seed: 24                  # PRNG seed for reproducibility
+    section: .text	# .stack, .bss, .data, .text
+

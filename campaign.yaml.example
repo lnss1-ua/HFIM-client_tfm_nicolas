@@ -17,6 +17,10 @@ defaults:
 campaigns:
   # --- Register faults (default) ---
 
+  # Basic register fault campaign on robot_arm
+  - benchmark: robot_arm
+
+
   # Basic register fault campaign on mmult
   - benchmark: mmult
 

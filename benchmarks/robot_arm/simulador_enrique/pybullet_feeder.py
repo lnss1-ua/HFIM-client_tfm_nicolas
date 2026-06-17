@@ -50,11 +50,6 @@ def start_pybullet(fixed_base, initial_position):
         flags=p.URDF_USE_SELF_COLLISION,
     )
 
-    p.changeDynamics(robot, 0,
-                     restitution=0.0,
-                     linearDamping=0.04,
-                     angularDamping=0.04)
-
     for link_idx in range(p.getNumJoints(robot)):
         p.changeDynamics(
             robot, link_idx,
@@ -93,10 +88,11 @@ def main():
     ser.write(b'K')
 
     # Start pybullet
-    position = [0.0, 0.9, 0.35] if args.fixed_base else [0.0, 0.0, 0.35]
+    position = [0.0, 0.9, 0.35] if args.fixed_base else [0.0, 0.0, 0.34]
     robot = start_pybullet(args.fixed_base, position)
 
     indices = [1, 2, 4, 5]
+    joints_bloqueados = [0, 3]
     n_active = len(indices)
 
     traj_log = None
@@ -117,10 +113,20 @@ def main():
         controlMode=p.VELOCITY_CONTROL,
         forces=[0.0] * n_active,
     )
+    
+    for j in joints_bloqueados:
+        pos_actual = p.getJointState(robot, j)[0]  # lee su posición actual
+        p.setJointMotorControl2(
+            bodyUniqueId=robot,
+            jointIndex=j,
+            controlMode=p.POSITION_CONTROL,
+            targetPosition=pos_actual,  # se queda donde está
+            force=99999               # fuerza suficiente para no moverse
+        )
 
     movimiento_terminado = False
     targets = [0.0, 2.8, -0.3, 0.0]
-    max_iterations = 2000
+    max_iterations = 4000
     iteration = 0
 
     while iteration < max_iterations:
@@ -128,20 +134,25 @@ def main():
         states = p.getJointStates(robot, indices)
         posicion = [s[0] for s in states]
 
-        # Send positions
+        # Enviar posiciones
         for i in range(n_active):
             ser.write(struct.pack('<f', posicion[i]))
 
-        # Read ACK
-        ack = ser.read(1)
-        if ack != b'K':
-            if not ack:
-                print("[feeder] Timeout waiting for ack", file=sys.stderr)
+        # Read C's status byte (K=continue, F=first target reached, S=done)
+        c_status = ser.read(1)
+        if c_status == b'S':
+            print("[feeder] C code signaled completion", file=sys.stderr)
+            break
+        elif c_status == b'F':
+            print("[feeder] C code reached first target", file=sys.stderr)
+        elif c_status != b'K':
+            if not c_status:
+                print("[feeder] Timeout reading C status", file=sys.stderr)
             else:
-                print(f"[feeder] Unexpected ack: {ack!r}", file=sys.stderr)
+                print(f"[feeder] Unexpected C status: {c_status!r}", file=sys.stderr)
             break
 
-        # Read torques
+        # Leer torques
         tau = []
         for i in range(n_active):
             data = ser.read(4)
@@ -173,19 +184,7 @@ def main():
 
         p.stepSimulation()
 
-        # Read C's status byte (K=continue, F=first target reached, S=done)
-        c_status = ser.read(1)
-        if c_status == b'S':
-            print("[feeder] C code signaled completion", file=sys.stderr)
-            break
-        elif c_status == b'F':
-            print("[feeder] C code reached first target", file=sys.stderr)
-        elif c_status != b'K':
-            if not c_status:
-                print("[feeder] Timeout reading C status", file=sys.stderr)
-            else:
-                print(f"[feeder] Unexpected C status: {c_status!r}", file=sys.stderr)
-            break
+        
 
     if iteration >= max_iterations:
         print(f"[feeder] Max iterations ({max_iterations}) reached, forcing stop", file=sys.stderr)
