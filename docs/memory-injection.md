@@ -34,6 +34,35 @@ reserved by the linker between `__stack_bottom` and `__stack_top`. FIM resolves
 of these and no `.stack` header, give a numeric `memory_start`/`memory_end` for
 the stack region instead.
 
+## By variable name
+
+Point `target_variable:` at the name of a global or `static` variable and FIM
+injects anywhere inside that variable's bytes. The address and size both come
+from the ELF symbol table, so you never specify the size yourself:
+
+```yaml
+fault: memory
+target_variable: "target_position"   # a global or function-static variable
+memory_access_size: 4
+```
+
+FIM reads the variable's `st_value` (address) and `st_size` (byte extent) from
+the symbol table - the same data `readelf -s` / `objdump -t` print. `st_size` is
+the full extent, so an array like `float target_position[4]` resolves to its
+whole 16-byte span, not one element. No DWARF/`-g` is required.
+
+Requirements:
+
+- The variable must have **static storage duration** - a file-scope global or a
+  function-`static`. A plain stack local has no fixed address and cannot be
+  targeted by name (use `section: .stack` or an explicit range instead).
+- It must be a **data** symbol (`STT_OBJECT`). Pointing `target_variable` at a
+  function name is rejected - inject code with a gem5 code target instead.
+- It must have non-zero size in the symbol table.
+
+`target_variable` replaces `section:` and `memory_start`/`memory_end`; give one
+targeting mode, not several. When `target_variable` is set it takes precedence.
+
 ## By explicit address range
 
 When you want a specific span rather than a whole section, give the two ends.
@@ -86,6 +115,17 @@ Run it:
 ```bash
 ./run.sh benchmarks/my_algo -n 50 --fault memory
 ```
+
+## Choosing a targeting mode
+
+| Mode | Key(s) | Address from | Size from | Use when |
+|------|--------|--------------|-----------|----------|
+| Section | `section:` | ELF section header (or linker symbols for `.stack`) | whole section | you want to hit anywhere in `.bss`/`.data`/stack |
+| Variable | `target_variable:` | symbol `st_value` | symbol `st_size` | you want exactly one named global/static (correct size, no manual sizing) |
+| Range | `memory_start:` / `memory_end:` | you | you | you need a specific span the other two modes can't express |
+
+All three feed the same byte-granular injector; they differ only in how the
+target byte range is resolved. Pick one per campaign.
 
 ## See also
 

@@ -85,8 +85,17 @@ bit_width: 8               # 8 | 16 | 32 | 64 (default 32)
 linker's `__stack_bottom`/`__stack_top` symbols). See
 [Memory Injection](memory-injection.md).
 
-Or give an explicit address range instead of a section (use one or the
-other, not both):
+Or name a single global/`static` variable - address and size both come from
+the ELF symbol table, so you never set the size:
+
+```yaml
+fault: memory
+target_variable: "target_position"  # global or function-static; size from st_size
+memory_access_size: 4
+```
+
+Or give an explicit address range (use one targeting mode, not several -
+`target_variable` takes precedence over `section`/`memory_start`):
 
 ```yaml
 fault: memory
@@ -94,7 +103,7 @@ memory_start: "0x80001000"  # section name, hex string, or int
 memory_end:   "0x80002000"  # must be greater than memory_start
 ```
 
-Details and section targeting: [Memory Injection](memory-injection.md).
+Details and the targeting-mode matrix: [Memory Injection](memory-injection.md).
 
 ### gem5-only targets
 
@@ -191,6 +200,7 @@ results:
 | `bit_width` | `8`, `16`, `32`, `64` |
 | `injection_mode` | `breakpoint`, `timer`, `icount`, `stepi` |
 | `memory_access_size` | `1`, `2`, `4`, `8` |
+| `target_variable` | any global/`static` data symbol name (memory faults only) |
 | `fault` | `register`, `memory`, `cache_l1d`, `cache_l1i`, `cache_l2`, `dram`, ... (gem5 targets in [gem5 Targets](gem5-targets.md)) |
 
 ## See also
