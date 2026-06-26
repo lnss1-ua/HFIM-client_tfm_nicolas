@@ -1,22 +1,39 @@
 # FIM config -- robot arm PID controller
 # Requires serial PTY feeder (PyBullet simulator)
+#
+# MODO: breakpoint en el marcador fim_breakpoint() (config 06, recompile-stable).
+# El benchmark coloca fim_breakpoint() justo antes del calculo del PID (main.c).
+# En modo breakpoint, la campana resuelve ese simbolo automaticamente y para el
+# PC ahi -- no hace falta inject_at_symbol/inject_at_offset.
+#
+# Por que no el histograma de ventana W4: el bucle de espera UART del feeder
+# (uart_getc) ejecuta decenas de miles de veces dentro de [fim_init, fim_exit],
+# y su trip count NO es reproducible run-to-run (depende del timing del feeder).
+# Un sorteo ponderado por trip count cae sobre ese spin, no sobre la matematica
+# de control. El marcador puntual lo evita.
+#
+# Por que no main+0x96: ese offset de bytes se mueve si se recompila main.c.
+# El simbolo fim_breakpoint sobrevive la recompilacion.
 timeout: 120
+
+injection_mode: breakpoint
 
 observable_outputs:
   comparison: "exact"
   variables:
     - name: "tau"
+      type: "float[4]"
     - name: "posicion"
+      type: "float[4]"
     - name: "target_position"
+      type: "float[4]"
     - name: "loop_count"
+      type: "int"
 
-# The PID controller runs in double precision (C906 has the F/D extension
-# and the toolchain ABI is double-float). Posiciones, torques, errores
-# integrales and the PID gains all live in f-registers most of the time.
-# The server's default register list for --fault register is integer-only
-# (a0..a7, s0..s11, t0..t6) -- if we don't extend it here, ~95% of
-# injections land in idle integer registers and report MASKED, missing
-# the SDCs that drive the post-mortem trajectory classifier.
+# El PID corre en los registros float (la C906 tiene F/D y la ABI es double).
+# La lista de registros enteros por defecto del servidor para --fault register
+# deja ~95% de inyecciones en registros enteros ociosos -> MASKED. Ampliamos
+# a los f-registros donde vive de verdad el calculo del PID.
 target_registers:
   # Integer ABI (control flow, loop counter, addresses)
   - a0

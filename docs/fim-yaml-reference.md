@@ -126,6 +126,42 @@ checkpoint_locations:      # function name for the simulator snapshot
   `timeout_factor * golden_execution_time`, floored at 30s. Use only when the
   golden run is deterministic and recorded a golden time.
 
+## Injection timing + window
+
+```yaml
+injection_mode: breakpoint   # breakpoint | timer | icount | stepi (default: timer)
+```
+
+For random campaigns the fault's location is drawn from the
+`[fim_init, fim_exit)` instruction window - the SDK markers you already place
+around the code under test. There is no separate window field: instrument the
+benchmark, and the window follows.
+
+- `breakpoint` (recommended, feeder-robust): a GDB breakpoint at the drawn PC.
+  The CPU stops exactly when it executes that instruction. Reliable for
+  serial-feeder benchmarks where instruction counts drift with feeder wall-time.
+- `timer` (default): continue for a scaled duration, then interrupt. Fast but
+  imprecise about which instruction is hit.
+- `icount`: a TCG plugin pauses at the Nth committed instruction. Deterministic,
+  but fragile for feeder benchmarks (the count moves with feeder timing).
+- `stepi`: single-step to the target. Deterministic but slow over the network.
+
+### Hit-instance (loop-iteration spread)
+
+When the code under test is a loop inside the window, a plain breakpoint fires
+on the FIRST time the PC executes - always iteration 1. To spread injections
+across the loop's iterations, breakpoint mode draws a random **hit-instance**
+`K` per injection from `[0, window_hit_count)` and arms the breakpoint with a
+GDB ignore-count of `K`, so it fires on the `(K+1)`th hit.
+
+- `window_hit_count` is the loop trip count, harvested from the golden run's
+  `trace.json`. You do not set it.
+- When the golden run did not measure it (`window_hit_count` absent or `0`),
+  `K` degrades to `0` (first hit) - i.e. exactly the legacy behaviour. No error.
+- `K` is recorded per injection in the faultlist / `injections.csv`
+  (`hit_instance` column) so a campaign replays deterministically. Old
+  faultlists with no such column load as `K=0`.
+
 ## Serial feeder (external simulator)
 
 ```yaml
@@ -153,6 +189,7 @@ results:
 | `comparison` | `exact`, `tolerance` |
 | `fault_model` | `single_bit_flip`, `stuck_at_0`, `stuck_at_1` |
 | `bit_width` | `8`, `16`, `32`, `64` |
+| `injection_mode` | `breakpoint`, `timer`, `icount`, `stepi` |
 | `memory_access_size` | `1`, `2`, `4`, `8` |
 | `fault` | `register`, `memory`, `cache_l1d`, `cache_l1i`, `cache_l2`, `dram`, ... (gem5 targets in [gem5 Targets](gem5-targets.md)) |
 

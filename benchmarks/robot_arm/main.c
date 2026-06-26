@@ -88,16 +88,19 @@ volatile int loop_count;
 
 int main() {
 
+    // Inicializar objetivo ANTES del handshake: asi target_position vive en .bss
+    // desde el primer instante y no solo despues del ACK (la espera del ACK domina
+    // el icount, por eso una inyeccion por icount lo encontraba todavia a 0).
+    target_position[0] = 0.0f;
+    target_position[1] = 2.8f;
+    target_position[2] = -0.3f;
+    target_position[3] = 0.0f;
+
     // Esperar ACK inicial de Python
     char ack = uart_getc();
     while (ack != 'K') {
         ack = uart_getc();
     }
-
-    target_position[0] = 0.0f;
-    target_position[1] = 2.8f;
-    target_position[2] = -0.3f;
-    target_position[3] = 0.0f;
 
     float integral[NUM_ACTIVE_JOINTS]   = {0};
     float prev_error[NUM_ACTIVE_JOINTS] = {0};
@@ -113,7 +116,11 @@ int main() {
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             posicion[i] = uart_get_float();
         }
-        uart_putc('K');  
+        uart_putc('K');
+        // Punctual injection point: break on the PID compute, not the UART
+        // spin loop. The window histogram weights the feeder spin PC (whose
+        // trip count is not reproducible) far above the control math.
+        fim_breakpoint();
         //Cálculo de valor de control
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             float error      = target_position[i] - posicion[i];

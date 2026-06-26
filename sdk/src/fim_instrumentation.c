@@ -31,6 +31,25 @@ __attribute__((noinline)) void fim_init(void) {
 }
 
 /**
+ * Punctual fault-injection point marker.
+ *
+ * A single fixed PC for the campaign to break at, as opposed to the
+ * [fim_init, fim_exit] window. Place this where the code-under-test lives
+ * (e.g. inside the control loop body) when the window histogram is unreliable.
+ *
+ * Implementation note:
+ * - Non-inline to ensure a stable address in the ELF symbol table
+ * - Has observable side effects to prevent compiler optimization
+ */
+__attribute__((noinline)) void fim_breakpoint(void) {
+    /* 0xF1000003 = "FIM breakpoint" marker (F1 prefix, 0x00003 = breakpoint) */
+    volatile uint32_t marker = 0xF1000003;
+    (void)marker;
+
+    asm volatile("" ::: "memory");
+}
+
+/**
  * Exit QEMU with specified exit code.
  *
  * This function is the counterpart to fim_init() — it marks the end of the

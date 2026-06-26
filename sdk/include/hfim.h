@@ -49,6 +49,27 @@
 void fim_init(void);
 
 /**
+ * Punctual fault-injection point marker.
+ *
+ * Place fim_breakpoint() at the exact source location where the campaign
+ * should stop the PC and inject a fault. Unlike the [fim_init, fim_exit]
+ * window (which the campaign samples by per-PC trip count), this is a single
+ * fixed PC. Use it for benchmarks where the window histogram is unreliable,
+ * e.g. serial-feeder benchmarks whose UART spin-loop trip counts are not
+ * reproducible run-to-run, so a trip-count-weighted draw lands on the spin
+ * instead of the code-under-test.
+ *
+ * Set `inject_at_symbol: fim_breakpoint` in fim.yaml to break here. The
+ * symbol address is recompile-stable, unlike a raw `main + 0xNN` byte offset.
+ *
+ * Implementation note:
+ * - Non-inline to ensure a stable address in the ELF symbol table
+ * - Implemented in fim_instrumentation.c (not header-only)
+ * - Has observable side effects to prevent compiler optimization
+ */
+void fim_breakpoint(void);
+
+/**
  * Exit QEMU with specified exit code.
  *
  * This function writes to the sifive_test device to terminate QEMU.
