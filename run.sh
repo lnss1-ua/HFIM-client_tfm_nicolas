@@ -196,7 +196,7 @@ echo ""
 # completion (serial_pty benchmarks like robot_arm force inline execution and
 # finish before this returns) vs was submitted fire-and-forget to the fleet.
 RUN_OUT=$(mktemp)
-ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
+ssh $SSH_OPTS "$REMOTE" "FIM_FORCE_INLINE_PTY=${FIM_FORCE_INLINE_PTY:-0} fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
     sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g' \
     | tee "$RUN_OUT"
 

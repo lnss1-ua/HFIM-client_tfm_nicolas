@@ -34,6 +34,38 @@ reserved by the linker between `__stack_bottom` and `__stack_top`. FIM resolves
 of these and no `.stack` header, give a numeric `memory_start`/`memory_end` for
 the stack region instead.
 
+`.stack` is resolved **once** at setup and covers the **whole reservation**. The
+reservation is usually far larger than the live frame (e.g. robot_arm reserves
+16 KB, `0x80000650`-`0x80004650`, but the running frame is only a few hundred
+bytes). Most of that range is never written during the run - it stays `0x00` and
+is never read - so a flip there is masked on arrival. A `.stack` campaign on a
+deeply over-provisioned stack therefore tends toward 0% SDC. That is a property
+of the reservation size, **not** a measure of stack robustness. To target only
+the bytes the program is actually using, use `.stack-live` (below).
+
+### The live stack window (`section: .stack-live`)
+
+```yaml
+fault: memory
+section: .stack-live
+injection_mode: breakpoint     # see note for the icount/timer path
+```
+
+`.stack-live` bounds injection to the **live** window `[sp, __stack_top]` - only
+the established frame, never the dead reservation below `sp`. It shares
+`__stack_top` with `.stack`; only the lower bound differs (the live stack
+pointer instead of `__stack_bottom`). Two resolution paths:
+
+- **Breakpoint mode** (feeder benchmarks like robot_arm): the live `sp` is read
+  from GDB at each breakpoint stop and the window is re-drawn **per injection**,
+  so it tracks the real frame at the moment you inject.
+- **icount/timer mode**: there is no live stop to read `sp` from, so FIM uses the
+  golden run's recorded SP envelope (min/initial). The golden run must record it;
+  if it has not, FIM errors and asks you to regenerate the golden.
+
+Use `.stack-live` when you want the stack SDC rate of the bytes in use; use
+`.stack` only when you specifically want the whole-reservation baseline.
+
 ## By variable name
 
 Point `target_variable:` at the name of a global or `static` variable and FIM
@@ -121,6 +153,7 @@ Run it:
 | Mode | Key(s) | Address from | Size from | Use when |
 |------|--------|--------------|-----------|----------|
 | Section | `section:` | ELF section header (or linker symbols for `.stack`) | whole section | you want to hit anywhere in `.bss`/`.data`/stack |
+| Live stack | `section: .stack-live` | live `sp` (per injection) to `__stack_top` | the live window | you want the stack SDC rate of the bytes actually in use, not the dead reservation |
 | Variable | `target_variable:` | symbol `st_value` | symbol `st_size` | you want exactly one named global/static (correct size, no manual sizing) |
 | Range | `memory_start:` / `memory_end:` | you | you | you need a specific span the other two modes can't express |
 
