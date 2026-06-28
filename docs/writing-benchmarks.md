@@ -10,7 +10,7 @@ cp -r benchmarks/template benchmarks/my_algo
 ## main.c
 
 ```c
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 64
 

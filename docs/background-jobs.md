@@ -88,7 +88,7 @@ the per-injection bulk.
 results/<campaign>/
   injections.csv     # one row per injection
   report.tsv         # tab-separated report
-  metadata.json      # campaign parameters + outcome tally
+  metadata.json      # campaign parameters, outcome tally, and target block (see Results)
   provenance.json    # what was run, with what tooling
   faultlist.json     # the fault list (reproducible from the seed)
   source/            # the benchmark as it was run
