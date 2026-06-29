@@ -10,7 +10,7 @@ cp -r benchmarks/template benchmarks/my_algo
 ## main.c
 
 ```c
-#include "fim_exit.h"
+#include "hfim.h"
 
 #define N 64
 
@@ -32,8 +32,13 @@ int main(void) {
 
 ## The rules
 
-1. **`fim_init()` / `fim_exit(0)` bracket the code under test.** Faults are
-   only injected between these two markers. Do all setup before `fim_init()`.
+1. **`fim_init()` / `fim_exit(0)` bracket the code under test.** In random
+   injection the fault address is drawn from the `[fim_init, fim_exit)`
+   instruction window - the two markers ARE the window, you do not declare it
+   separately. Do all setup before `fim_init()`. If the code under test is a
+   loop inside the window, breakpoint mode also spreads injections across the
+   loop's iterations (see "hit-instance" in the
+   [fim.yaml Reference](fim-yaml-reference.md)).
 
 2. **Observable outputs are file-scope `volatile`.** FIM reads these to detect
    SDC. Declare them as `volatile int result[N]` at file scope, never as locals
@@ -47,6 +52,16 @@ int main(void) {
 
 5. **Initialize before `fim_init()`.** Arrays, constants, and any I/O handshake
    belong before the window so a fault can't corrupt setup.
+
+6. **`fim_breakpoint()` pins a punctual injection point (feeder benchmarks).**
+   Place `fim_breakpoint();` on the line you want to fault. In breakpoint mode
+   the campaign auto-detects it and stops the PC there - no `inject_at_symbol`
+   needed. Use it when the `[fim_init, fim_exit)` window is unreliable: a
+   serial-feeder benchmark spends most of the window in a UART spin loop whose
+   per-PC execution count is not reproducible run-to-run, so a window draw lands
+   on the spin instead of the code under test. The symbol address is
+   recompile-stable, unlike a raw `main + 0xNN` byte offset. Benchmarks that do
+   not call it keep using the window unchanged.
 
 ## fim.yaml (minimum)
 

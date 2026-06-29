@@ -31,7 +31,7 @@ results/<campaign>/
   results.txt          # human-readable summary (outcome table, per-register breakdown)
   injections.csv       # one row per injection (target, bit, outcome, ...)
   report.tsv           # tab-separated report
-  metadata.json        # campaign parameters
+  metadata.json        # campaign parameters, outcome tally, and target block
   provenance.json      # what was run, with what tooling
   faultlist.json       # the generated fault list (reproducible from the seed)
   server.log           # server-side log for this run
@@ -53,6 +53,46 @@ exact binary the campaign injected into travels with its results.
 Per-injection files (like a feeder's `trajectory.csv`) sit in
 `injections/NNNN/`, keyed by the same index used in `injections.csv`, so each
 artefact is unambiguously tied to its fault.
+
+## The `target` block in metadata.json
+
+For a memory campaign, `metadata.json` carries a `target` block recording what
+region was injected:
+
+```json
+"target": {
+  "mode": "section",
+  "name": ".stack-live",
+  "access_size": 4,
+  "span_source": "observed",
+  "start": "0x800045e8",
+  "end": "0x8000465c",
+  "bytes": 116
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `mode` | how the region was selected: `section`, `variable`, or `range`. |
+| `name` | the section name, variable name, or `range`. |
+| `access_size` | bytes per read-modify-write at the injected address. |
+| `start` / `end` / `bytes` | the resolved span. Hex strings for the addresses, integer byte count. May be `null` (see `span_source`). |
+| `span_source` | provenance of the span - see below. |
+| `stack_top` | for `.stack-live`, the `__stack_top` upper bound shared with `.stack` (present only on that path). |
+
+`span_source` tells you how literally to read the span:
+
+- **`observed`** - the span is the min/max of the addresses actually injected.
+  For `.stack-live` that sample *is* the answer: there is no static extent (the
+  live window is `[sp, __stack_top]` per injection), so observed min/max is
+  exactly the region in use. Because it is sampled, the span widens with `n` - a
+  larger campaign reports a slightly larger window.
+- **`unresolved-in-fleet`** - the parallel/fleet path consolidates per-injection
+  rows and cannot see the resolver's static range, and the observed min/max would
+  *under-report* a fixed extent (a small `n` may never touch a variable's last
+  byte). Rather than emit a wrong number, `start`/`end`/`bytes` are `null`. The
+  authoritative extent for a variable is its ELF `st_size`; for a section, its
+  header range.
 
 ## download.sh
 

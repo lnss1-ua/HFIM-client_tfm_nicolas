@@ -70,6 +70,15 @@ An ambiguous prefix (matching more than one campaign) is refused and the
 candidates are listed, so you never download the wrong run. Use `status.sh` to
 see the ids.
 
+### About the campaign id
+
+Ids look long because they are built to never collide:
+`<benchmark>_<arch>_<date>_<time>_<micros>_<short-uuid>`, e.g.
+`robot_arm_riscv64_20260605_183047_509126_57e7db`. You almost never type the
+whole thing - any unique fragment works, so the trailing `57e7db` (or even
+`robot_arm_riscv`) is enough as long as it matches exactly one run. When in
+doubt, `--latest` grabs the most recent completed campaign with no id at all.
+
 ### Summary vs full
 
 By default `download.sh` pulls a **summary**: enough to read the outcome without
@@ -79,7 +88,7 @@ the per-injection bulk.
 results/<campaign>/
   injections.csv     # one row per injection
   report.tsv         # tab-separated report
-  metadata.json      # campaign parameters + outcome tally
+  metadata.json      # campaign parameters, outcome tally, and target block (see Results)
   provenance.json    # what was run, with what tooling
   faultlist.json     # the fault list (reproducible from the seed)
   source/            # the benchmark as it was run
@@ -115,20 +124,14 @@ to delete it from the server after a successful fetch:
 
 ## Batch campaigns
 
-Run several campaigns from one YAML file instead of invoking `run.sh` per
-benchmark:
-
-```bash
-./run.sh --batch campaign.yaml
-./run.sh --batch campaign.yaml --background
-```
-
-The batch file lists multiple campaigns that share a `defaults:` block; each
-entry can override any default. See `campaign.yaml.example` for the full set of
-fields. `run.sh` uploads every benchmark the file references before starting.
+To run several campaigns from one YAML file instead of invoking `run.sh` per
+benchmark, see [Batch Campaigns](batch-campaigns.md). A batch submits and
+returns like any other background job, and each campaign in it shows up
+separately in `status.sh`.
 
 ## See also
 
+- [Batch Campaigns](batch-campaigns.md) - run a whole sweep from one YAML file
 - [Running Campaigns](running-campaigns.md) - the run.sh pipeline and flags
 - [Notifications](notifications.md) - get pinged when a run finishes
 - [Results](results.md) - the outcome classes and what each file contains

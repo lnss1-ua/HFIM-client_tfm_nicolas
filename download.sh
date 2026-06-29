@@ -139,9 +139,29 @@ PY
 )
 
 CID=$(ssh $SSH_OPTS "$REMOTE" "fim-run jobs --json" \
-    | python3 -c "$RESOLVE_PY" "${SELECTOR:-}" "$LATEST") || exit 1
+    | python3 -c "$RESOLVE_PY" "${SELECTOR:-}" "$LATEST") || CID=""
 
-[ -n "$CID" ] || { echo "Could not resolve a campaign id." >&2; exit 1; }
+# Filesystem fallback. serial_pty benchmarks (robot_arm) run inline and never
+# register with the gateway ledger, so `fim-run jobs` can't resolve them -- the
+# results still exist under results/. When the ledger lookup fails, resolve the
+# id/prefix (or --latest) against the result dirs directly. --latest here means
+# "most recently modified result dir for this user".
+if [ -z "$CID" ]; then
+    if [ "$LATEST" = true ]; then
+        CID=$(ssh $SSH_OPTS "$REMOTE" "ls -1dt ${REMOTE_RESULTS}/*/ 2>/dev/null | head -1 | xargs -r basename")
+    else
+        MATCHES=$(ssh $SSH_OPTS "$REMOTE" "ls -1d ${REMOTE_RESULTS}/${SELECTOR}* 2>/dev/null | xargs -rn1 basename")
+        N=$(printf '%s\n' "$MATCHES" | grep -c . || true)
+        if [ "$N" -gt 1 ]; then
+            echo "'${SELECTOR}' is ambiguous -- matches ${N} result dirs:" >&2
+            printf '  %s\n' $MATCHES >&2
+            exit 2
+        fi
+        CID="$MATCHES"
+    fi
+fi
+
+[ -n "$CID" ] || { echo "Could not resolve a campaign id. Run ./status.sh to list ids." >&2; exit 1; }
 echo "Campaign: $CID"
 
 REMOTE_DIR="${REMOTE_RESULTS}/${CID}"

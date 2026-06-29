@@ -192,8 +192,13 @@ echo ""
 # campaign to completion regardless of this SSH session. By default fim-run
 # submits and returns (fire-and-forget); the campaign keeps running after this
 # command exits. Pass --follow to stream live output instead.
-ssh $SSH_OPTS "$REMOTE" "fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
-    sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g'
+# Capture the run output so we can tell whether the campaign ran inline to
+# completion (serial_pty benchmarks like robot_arm force inline execution and
+# finish before this returns) vs was submitted fire-and-forget to the fleet.
+RUN_OUT=$(mktemp)
+ssh $SSH_OPTS "$REMOTE" "FIM_FORCE_INLINE_PTY=${FIM_FORCE_INLINE_PTY:-0} fim-run run ${NAME} ${PASS_ARGS[*]:-}" 2>&1 | \
+    sed -e 's|/srv/fim/users/[^/]*/||g' -e 's|/home/[^/]*/[^ ]*/||g' -e 's|\x1b\[[0-9;]*m||g' \
+    | tee "$RUN_OUT"
 
 # Only --follow waits for completion locally; in that case the result tree is
 # ready and we download it now. Otherwise (the default) the campaign is still
@@ -203,7 +208,16 @@ for arg in "${PASS_ARGS[@]}"; do
     [ "$arg" = "--follow" ] && FOLLOWED=true
 done
 
-if [ "$FOLLOWED" != true ]; then
+# Inline-completion detection: fim-run prints "Campaign complete: <id>" to stdout
+# only when the campaign ran to completion in this session (serial_pty / inline
+# path). Such a run never registers with the gateway ledger, so ./status.sh and
+# ./download.sh --latest (which read `fim-run jobs`) can't see it -- the student
+# is left with an empty results/ dir. When we detect this marker, download that
+# exact id now, the same way --follow does, regardless of the --follow flag.
+INLINE_CID=$(grep -oE 'Campaign complete: [A-Za-z0-9_]+' "$RUN_OUT" | tail -1 | awk '{print $3}')
+rm -f "$RUN_OUT"
+
+if [ "$FOLLOWED" != true ] && [ -z "$INLINE_CID" ]; then
     echo ""
     echo "Campaign is running on the server fleet (keeps running after this exits)."
     echo "  Check progress:   ./status.sh   (or ./status.sh --watch)"
@@ -218,7 +232,15 @@ mkdir -p "$LOCAL_RESULTS"
 
 echo ""
 echo "Downloading results..."
-LATEST=$(ssh $SSH_OPTS "$REMOTE" "ls -1d ${REMOTE_RESULTS}/${NAME}_* 2>/dev/null | sort | tail -1")
+# Prefer the exact id parsed from the run output (inline completion); only fall
+# back to the newest-dir heuristic for --follow fleet runs that don't print one.
+# The heuristic is a guess on the box-wide shared results dir, so the exact id is
+# always safer when we have it.
+if [ -n "$INLINE_CID" ]; then
+    LATEST="${REMOTE_RESULTS}/${INLINE_CID}"
+else
+    LATEST=$(ssh $SSH_OPTS "$REMOTE" "ls -1d ${REMOTE_RESULTS}/${NAME}_* 2>/dev/null | sort | tail -1")
+fi
 if [ -n "$LATEST" ]; then
     RESULT_NAME=$(basename "$LATEST")
     scp $SSH_OPTS -r "${REMOTE}:${LATEST}" "$LOCAL_RESULTS/"

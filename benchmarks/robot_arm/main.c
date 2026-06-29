@@ -83,7 +83,9 @@ volatile int loop_count;
 
 int main() {
 
-        
+    // Inicializar objetivo ANTES del handshake: asi target_position vive en .bss
+    // desde el primer instante y no solo despues del ACK (la espera del ACK domina
+    // el icount, por eso una inyeccion por icount lo encontraba todavia a 0).
     target_position[0] = 0.0f;
     target_position[1] = 2.8f;
     target_position[2] = -0.3f;
@@ -114,7 +116,7 @@ int main() {
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             posicion[i] = uart_get_float();
         }
-                
+
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             double diff = posicion[i] - target_position[i];
             if (diff < 0) 
