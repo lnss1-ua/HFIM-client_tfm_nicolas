@@ -152,7 +152,7 @@ def main():
                 print(f"[feeder] Unexpected C status: {c_status!r}", file=sys.stderr)
             break
 
-        # Leer torques
+        # Read torques
         tau = []
         for i in range(n_active):
             data = ser.read(4)

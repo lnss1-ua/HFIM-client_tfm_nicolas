@@ -2,55 +2,28 @@
 # Requires serial PTY feeder (PyBullet simulator)
 timeout: 120
 
+injection_mode: breakpoint
+
+target_types: [memory]
+section: .bss
+memory_access_size: 4
+fault_model: single_bit_flip
+
 observable_outputs:
   comparison: "exact"
   variables:
     - name: "tau"
+      type: "float[4]"
     - name: "posicion"
+      type: "float[4]"
     - name: "target_position"
+      type: "float[4]"
     - name: "loop_count"
+      type: "int"
 
-# The PID controller runs in double precision (C906 has the F/D extension
-# and the toolchain ABI is double-float). Posiciones, torques, errores
-# integrales and the PID gains all live in f-registers most of the time.
-# The server's default register list for --fault register is integer-only
-# (a0..a7, s0..s11, t0..t6) -- if we don't extend it here, ~95% of
-# injections land in idle integer registers and report MASKED, missing
-# the SDCs that drive the post-mortem trajectory classifier.
-target_registers:
-  # Integer ABI (control flow, loop counter, addresses)
-  - a0
-  - a1
-  - a2
-  - a3
-  - a4
-  - a5
-  - s0
-  - s1
-  - s2
-  - s3
-  - t0
-  - t1
-  - t2
-  # Float ABI -- where the PID math actually lives
-  - fa0
-  - fa1
-  - fa2
-  - fa3
-  - fa4
-  - fa5
-  - fa6
-  - fa7
-  - fs0
-  - fs1
-  - fs2
-  - fs3
-  - ft0
-  - ft1
-  - ft2
-  - ft3
-  - ft4
-  - ft5
+#target_registers: auto
+#include_int: true
+#include_float: true
 
 serial_pty: true
 serial_feeder_cmd: "python3 {benchmark_dir}/simulador_enrique/pybullet_feeder.py --pty {pty} --trajectory-log {injection_outdir}/trajectory.csv"

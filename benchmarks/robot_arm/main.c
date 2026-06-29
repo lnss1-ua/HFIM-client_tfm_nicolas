@@ -83,23 +83,29 @@ volatile int loop_count;
 
 int main() {
 
+        
+    target_position[0] = 0.0f;
+    target_position[1] = 2.8f;
+    target_position[2] = -0.3f;
+    target_position[3] = 0.0f;
+    loop_count = 0;
+    
+    for(int i = 0; i < NUM_ACTIVE_JOINTS; ++i) {
+        posicion[i] = 0.0;
+        tau[i] = 0.0;
+    }
+
     // Esperar ACK inicial de Python
     char ack = uart_getc();
     while (ack != 'K') {
         ack = uart_getc();
     }
 
-    target_position[0] = 0.0f;
-    target_position[1] = 2.8f;
-    target_position[2] = -0.3f;
-    target_position[3] = 0.0f;
-
     float integral[NUM_ACTIVE_JOINTS]   = {0};
     float prev_error[NUM_ACTIVE_JOINTS] = {0};
     const int MAX_TAU = 5;
     int target_alcanzado = 0;
     int movimiento_terminado = 0;
-    loop_count = 0;
 
     fim_init();
 
@@ -108,7 +114,7 @@ int main() {
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             posicion[i] = uart_get_float();
         }
-        
+                
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             double diff = posicion[i] - target_position[i];
             if (diff < 0) 
@@ -126,7 +132,8 @@ int main() {
         } else {
             uart_putc('K');
         }
-          
+        
+        fim_breakpoint();
         // Cálculo de valor de control por cada articulación activa
         for (int i = 0; i < NUM_ACTIVE_JOINTS; i++) {
             // Diferencia entre posición objetivo y posición real
@@ -154,10 +161,7 @@ int main() {
             uart_put_float(tau[i]);
         }
 
-        loop_count++;
-
-        // Control de fin //
-        
+        loop_count++;        
 
     } while (!target_alcanzado);
 }
